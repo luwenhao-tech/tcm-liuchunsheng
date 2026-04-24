@@ -43,6 +43,7 @@
     overflow-y: auto;
     padding-right: 4px;
   }
+  .side > *:last-child { margin-top: auto; }
   .side::-webkit-scrollbar { width: 6px; }
   .side::-webkit-scrollbar-thumb { background: #8b5a2b; border-radius: 3px; }
 
@@ -352,6 +353,7 @@
   }
   .msg.user .bubble { background: #e6f0eb; color: #1e3d33; }
   .msg.assistant .bubble { background: #fff8e3; color: #3a2410; box-shadow: 0 2px 6px rgba(0,0,0,.04); }
+  .bubble strong { font-weight: 900; color: #a83224; font-family: "PingFang SC Heavy", "Microsoft YaHei", "Heiti SC", "SimHei", sans-serif; }
 
   /* 输入栏：变窄，青春薄荷配色 */
   .inputbar {
@@ -756,14 +758,17 @@ async function send() {
           const obj = JSON.parse(data);
           if (obj.token) {
             full += obj.token;
-            const clean = full.replace(/\*\*/g, "").replace(/(^|\s)\*(\S)/g, "$1$2").replace(/\*/g, "");
-            bubble.textContent = clean;
+            bubble.textContent = full;
             chat.scrollTop = chat.scrollHeight;
           }
           if (obj.error) bubble.textContent += "\n[错误] " + obj.error;
         } catch (e) {}
       }
     }
+    // 流式完成后：转换 **加粗** 为 <strong>
+    bubble.innerHTML = escapeHtml(full)
+      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/「([^」\n]+)」/g, '<strong>$1</strong>');
     history.push({ role: "user", content: prompt });
     history.push({ role: "assistant", content: full });
     if (history.length > 40) history = history.slice(-40);

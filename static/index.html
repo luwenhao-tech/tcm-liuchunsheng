@@ -39,25 +39,26 @@
 
   /* ---------- 侧边栏（药柜风） ---------- */
   .side {
-    display: flex; flex-direction: column; gap: 14px;
-    overflow-y: auto;
-    padding-right: 4px;
+    display: flex; flex-direction: column; gap: 10px;
+    overflow: hidden;
+    padding-right: 0;
+    min-height: 0;
   }
-  .side::-webkit-scrollbar { width: 6px; }
-  .side::-webkit-scrollbar-thumb { background: #8b5a2b; border-radius: 3px; }
+  .side::-webkit-scrollbar { width: 0; }
 
   .panel {
     background: #fff;
     border: 1.5px solid #e4dfcc;
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 10px 12px;
     box-shadow: 0 2px 8px rgba(58, 143, 122, 0.06);
+    flex-shrink: 0;
   }
   .panel h3 {
-    margin: 0 0 10px; font-size: 13px;
+    margin: 0 0 8px; font-size: 12.5px;
     color: var(--bucm-green); letter-spacing: 2px;
     display: flex; align-items: center; gap: 6px;
-    padding-bottom: 8px; border-bottom: 1px dashed #d4e0d9;
+    padding-bottom: 6px; border-bottom: 1px dashed #d4e0d9;
     font-weight: 600;
   }
   .panel h3 .dot {
@@ -67,16 +68,16 @@
 
   /* 药柜抽屉 */
   .drawers {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
   }
   .drawer {
     background: linear-gradient(180deg, var(--bucm-green) 0%, var(--bucm-green-dark) 100%);
     color: #f5e6c4;
     border: 1.5px solid #0a1f1a;
     border-radius: 4px;
-    padding: 10px 6px;
+    padding: 7px 4px;
     text-align: center;
-    font-size: 13px;
+    font-size: 12.5px;
     letter-spacing: 1px;
     cursor: pointer;
     position: relative;
@@ -208,9 +209,9 @@
     letter-spacing: 1px;
     display: flex; align-items: center; gap: 4px;
     transition: all .15s;
-    margin-left: auto;
-    margin-right: 4px;
+    margin-left: 6px;
   }
+  #paperBtn { margin-left: auto; }
   .hist-btn:hover { background: rgba(255, 255, 255, 0.3); transform: none; box-shadow: none; }
 
   /* 历史记录抽屉 */
@@ -538,6 +539,7 @@
         中药鉴定学 · 刘春生老师 AI 助教
         <span class="sub">北京中医药大学 · 中药学院 · 岐黄传承</span>
       </h1>
+      <button class="hist-btn" id="paperBtn">📚 论著</button>
       <button class="hist-btn" id="histBtn">📜 历史</button>
     </header>
 
@@ -652,6 +654,25 @@
     </div>
   </div>
   <div class="hist-list" id="histList"></div>
+</aside>
+
+<!-- 论著弹窗 -->
+<div class="hist-mask" id="paperMask"></div>
+<aside class="hist-drawer" id="paperDrawer" style="width:520px;">
+  <div class="head">
+    <h2>📚 刘春生教授论著</h2>
+    <div class="actions">
+      <button class="mini" id="paperClose">关闭</button>
+    </div>
+  </div>
+  <div class="hist-list" id="paperList">
+    <div class="hist-empty">
+      <div class="icon">📖</div>
+      论文列表正在整理中……<br/>
+      待导入真实数据后展示。<br/><br/>
+      <span style="font-size:11px;color:#b8a890;">导入后可直接点击论文标题<br/>向 AI 询问该论文相关知识</span>
+    </div>
+  </div>
 </aside>
 
 <script>
@@ -841,6 +862,27 @@ $("histClearAll").onclick = () => {
   saveSessions([]);
   renderHistList();
 };
+
+/* 论著弹窗事件 */
+function openPaper() {
+  $("paperMask").classList.add("show");
+  $("paperDrawer").classList.add("show");
+}
+function closePaper() {
+  $("paperMask").classList.remove("show");
+  $("paperDrawer").classList.remove("show");
+}
+$("paperBtn").onclick = openPaper;
+$("paperClose").onclick = closePaper;
+$("paperMask").onclick = closePaper;
+$("paperList").addEventListener("click", (e) => {
+  const item = e.target.closest("[data-paper]");
+  if (item) {
+    $("prompt").value = "请讲讲刘春生教授这篇论文：《" + item.dataset.paper + "》的主要观点和贡献";
+    closePaper();
+    send();
+  }
+});
 $("histList").addEventListener("click", (e) => {
   const delBtn = e.target.closest("[data-del]");
   if (delBtn) {
@@ -868,7 +910,7 @@ document.addEventListener("click", (e) => {
 
 /* ESC 关闭抽屉 */
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeHist();
+  if (e.key === "Escape") { closeHist(); closePaper(); }
 });
 
 /* ============ 登录 ============ */

@@ -494,6 +494,10 @@
       </button>
       <div id="ckGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px;"></div>
       <div style="text-align:center;font-size:10px;color:#8a6a3a;margin-top:6px;letter-spacing:1px;">最近 28 天</div>
+      <div style="margin-top:12px;border-top:1px dashed #c9a771;padding-top:10px;">
+        <div style="font-size:12px;color:#6b4a24;letter-spacing:1px;margin-bottom:6px;">打卡记录</div>
+        <div id="ckLog" style="max-height:150px;overflow-y:auto;font-size:12px;color:#3d2a14;line-height:1.8;"></div>
+      </div>
     </div>
   </aside>
 
@@ -920,6 +924,23 @@ function renderCk() {
     cell.title = key + (has ? " 已打卡" : "");
     cell.style.cssText = `aspect-ratio:1;border-radius:3px;background:${has?"linear-gradient(135deg,var(--bucm-green),#4ea693)":"#ecd9b0"};border:1px solid ${has?"var(--bucm-gold)":"#d7bf91"};`;
     grid.appendChild(cell);
+  }
+
+  // 打卡记录明细（按日期倒序）
+  const log = $("ckLog");
+  const keys = Object.keys(data).sort().reverse();
+  if (!keys.length) {
+    log.innerHTML = '<div style="color:#8a6a3a;text-align:center;padding:8px 0;">暂无打卡记录</div>';
+  } else {
+    log.innerHTML = keys.map((k, idx) => {
+      const t = data[k].at ? new Date(data[k].at) : null;
+      const hm = t ? String(t.getHours()).padStart(2,"0") + ":" + String(t.getMinutes()).padStart(2,"0") : "";
+      const n = keys.length - idx;
+      return `<div style="display:flex;justify-content:space-between;padding:2px 0;">
+        <span>第 ${n} 天 · ${k}</span>
+        <span style="color:var(--bucm-green);">✓ ${hm}</span>
+      </div>`;
+    }).join("");
   }
 }
 

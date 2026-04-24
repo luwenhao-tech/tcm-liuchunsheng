@@ -1,4 +1,4 @@
-"""FastAPI 入口：中药鉴定学 - 刘春生老师 AI 助教。
+"""FastAPI 入口：中药鉴定学 - 刘春生教授 AI 助教。
 支持多轮对话历史，流式 SSE 输出。
 """
 import json
@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from llm_client import generate_stream, generate
 
-app = FastAPI(title="中药鉴定学 - 刘春生老师 AI 助教")
+app = FastAPI(title="中药鉴定学 - 刘春生教授 AI 助教")
 
 app.add_middleware(
     CORSMiddleware,

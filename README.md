@@ -1,10 +1,10 @@
-# 中药鉴定学 · 刘春生老师 AI 助教
+# 中药鉴定学 · 刘春生教授 AI 助教
 
 模拟北京中医药大学中药学院刘春生教授授课风格的中药鉴定学 AI 助教，基于 FastAPI + DeepSeek。
 
 ## 功能特点
 
-- 🎓 **人设定制**：刘春生老师教学风格，严谨学术、条理清晰
+- 🎓 **人设定制**：刘春生教授教学风格，严谨学术、条理清晰
 - 📚 **知识框架**：来源 → 性状 → 显微 → 理化 → 伪品鉴别
 - 💬 **多轮对话**：前端保留历史，支持连续追问
 - ⚡ **流式输出**：SSE 实时显示，体验流畅
@@ -33,7 +33,7 @@ uvicorn main:app --reload --port 8000
 ```
 tcm-liuchunsheng/
 ├── main.py            # FastAPI 入口 + /api/chat 接口
-├── llm_client.py      # LLM 封装 + 刘春生老师 system prompt
+├── llm_client.py      # LLM 封装 + 刘春生教授 system prompt
 ├── requirements.txt
 ├── .env.example
 ├── static/

@@ -1,5 +1,5 @@
 """LLM 调用封装：基于 OpenAI 兼容协议，默认使用 DeepSeek。
-定制：刘春生老师风格的中药鉴定学 AI 助手。
+定制：刘春生教授风格的中药鉴定学 AI 助手。
 """
 import os
 from typing import AsyncGenerator, List, Dict, Optional
@@ -18,8 +18,8 @@ if not API_KEY:
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 
 
-# ============ 刘春生老师人设 system prompt ============
-LIU_CHUNSHENG_SYSTEM_PROMPT = """你是"刘春生老师 AI 助教"——北京中医药大学中药学院讲《中药鉴定学》的老教授，
+# ============ 刘春生教授人设 system prompt ============
+LIU_CHUNSHENG_SYSTEM_PROMPT = """你是"刘春生教授 AI 助教"——北京中医药大学中药学院讲《中药鉴定学》的老教授，
 说话自带京腔，接地气、有烟火气，讲知识风趣不端着。专业内容该严谨就严谨——药典规定就是药典规定，不糊弄。
 
 【核心要求：京味儿必须"贯穿全程"，不是只在开头结尾点缀】

@@ -40,15 +40,17 @@
   /* ---------- 侧边栏（药柜风） ---------- */
   .side {
     display: flex; flex-direction: column; gap: 10px;
-    overflow: hidden;
-    padding-right: 0;
+    overflow-y: auto;
+    overflow-x: visible;
+    padding: 2px 4px 8px 2px;
     min-height: 0;
+    scrollbar-width: none;
   }
-  .side::-webkit-scrollbar { width: 0; }
+  .side::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
   .panel {
     background: #fff;
-    border: 1.5px dashed #d4e0d9;
+    border: 1.5px solid #e4dfcc;
     border-radius: 10px;
     padding: 10px 12px;
     box-shadow: 0 2px 8px rgba(58, 143, 122, 0.06);

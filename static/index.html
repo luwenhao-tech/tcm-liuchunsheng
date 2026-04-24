@@ -483,20 +483,22 @@
       </div>
     </div>
 
-    <!-- 学习打卡 -->
+    <!-- 今日考点 -->
     <div class="panel">
-      <h3><span class="dot"></span>学习打卡</h3>
-      <div class="stat"><span>今日</span><span id="ckToday">未打卡</span></div>
-      <div class="stat"><span>连续天数</span><span id="ckStreak">0 天</span></div>
-      <div class="stat"><span>累计天数</span><span id="ckTotal">0 天</span></div>
-      <button id="ckBtn" style="width:100%;margin-top:10px;padding:10px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--bucm-green),#4ea693);color:#fff8e3;font-size:14px;font-weight:600;letter-spacing:4px;cursor:pointer;box-shadow:0 2px 6px rgba(58,143,122,.25);">
-        今日打卡
-      </button>
-      <div id="ckGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px;"></div>
-      <div style="text-align:center;font-size:10px;color:#8a6a3a;margin-top:6px;letter-spacing:1px;">最近 28 天</div>
-      <div style="margin-top:12px;border-top:1px dashed #c9a771;padding-top:10px;">
-        <div style="font-size:12px;color:#6b4a24;letter-spacing:1px;margin-bottom:6px;">打卡记录</div>
-        <div id="ckLog" style="max-height:150px;overflow-y:auto;font-size:12px;color:#3d2a14;line-height:1.8;"></div>
+      <h3><span class="dot"></span>今日考点</h3>
+      <div class="quote" style="line-height:1.9;">
+        人参芦头「珍珠疙瘩」是身份证；<br/>
+        黄连「过桥」——节间光滑细长；<br/>
+        大黄断面「星点」——异型维管束；<br/>
+        三七「铜皮铁骨」——外黄内青。
+      </div>
+      <div style="margin-top:10px;border-top:1px dashed #c9a771;padding-top:10px;">
+        <div style="font-size:12px;color:#6b4a24;letter-spacing:1px;margin-bottom:6px;">易混淆对比</div>
+        <div style="font-size:12px;color:#3d2a14;line-height:1.8;">
+          川贝 vs 浙贝：怀中抱月 / 元宝状<br/>
+          金银花 vs 山银花：毛多腺稀 / 毛稀腺多<br/>
+          西洋参 vs 人参：横纹密 / 珍珠须
+        </div>
       </div>
     </div>
   </aside>
@@ -856,7 +858,6 @@ function hideLogin() { $("loginMask").style.display = "none"; }
   const u = getUser();
   if (u && u.name) {
     hideLogin();
-    initCheckIn();
   } else {
     showLogin();
   }
@@ -866,95 +867,12 @@ function hideLogin() { $("loginMask").style.display = "none"; }
     if (!name) { $("loginName").focus(); $("loginName").style.borderColor = "#a83224"; return; }
     setUser({ name, sid, loginAt: Date.now() });
     hideLogin();
-    initCheckIn();
   };
   $("loginName").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
   $("loginId").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
 })();
 
-/* ============ 打卡 ============ */
-const CK_KEY = "tcm_checkin_v1";
-function loadCk() {
-  try { return JSON.parse(localStorage.getItem(CK_KEY) || "{}"); } catch (e) { return {}; }
-}
-function saveCk(obj) { localStorage.setItem(CK_KEY, JSON.stringify(obj)); }
-function ymd(d) {
-  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
-function calcStreak(days) {
-  if (!days.size) return 0;
-  let n = 0;
-  const d = new Date();
-  while (days.has(ymd(d))) { n++; d.setDate(d.getDate()-1); }
-  return n;
-}
-
-function renderCk() {
-  const data = loadCk();
-  const days = new Set(Object.keys(data));
-  const today = ymd(new Date());
-  $("ckToday").textContent = days.has(today) ? "已打卡 ✓" : "未打卡";
-  $("ckToday").style.color = days.has(today) ? "var(--bucm-green)" : "#a83224";
-  $("ckStreak").textContent = calcStreak(days) + " 天";
-  $("ckTotal").textContent = days.size + " 天";
-
-  const btn = $("ckBtn");
-  if (days.has(today)) {
-    btn.textContent = "今日已打卡";
-    btn.disabled = true;
-    btn.style.opacity = ".55";
-    btn.style.cursor = "default";
-  } else {
-    btn.textContent = "今日打卡";
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.style.cursor = "pointer";
-  }
-
-  // 最近 28 天格子
-  const grid = $("ckGrid");
-  grid.innerHTML = "";
-  const now = new Date();
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(now); d.setDate(now.getDate() - i);
-    const key = ymd(d);
-    const cell = document.createElement("div");
-    const has = days.has(key);
-    cell.title = key + (has ? " 已打卡" : "");
-    cell.style.cssText = `aspect-ratio:1;border-radius:3px;background:${has?"linear-gradient(135deg,var(--bucm-green),#4ea693)":"#ecd9b0"};border:1px solid ${has?"var(--bucm-gold)":"#d7bf91"};`;
-    grid.appendChild(cell);
-  }
-
-  // 打卡记录明细（按日期倒序）
-  const log = $("ckLog");
-  const keys = Object.keys(data).sort().reverse();
-  if (!keys.length) {
-    log.innerHTML = '<div style="color:#8a6a3a;text-align:center;padding:8px 0;">暂无打卡记录</div>';
-  } else {
-    log.innerHTML = keys.map((k, idx) => {
-      const t = data[k].at ? new Date(data[k].at) : null;
-      const hm = t ? String(t.getHours()).padStart(2,"0") + ":" + String(t.getMinutes()).padStart(2,"0") : "";
-      const n = keys.length - idx;
-      return `<div style="display:flex;justify-content:space-between;padding:2px 0;">
-        <span>第 ${n} 天 · ${k}</span>
-        <span style="color:var(--bucm-green);">✓ ${hm}</span>
-      </div>`;
-    }).join("");
-  }
-}
-
-function initCheckIn() {
-  renderCk();
-  $("ckBtn").onclick = () => {
-    const data = loadCk();
-    const today = ymd(new Date());
-    if (data[today]) return;
-    data[today] = { at: Date.now() };
-    saveCk(data);
-    renderCk();
-  };
-}
+/* ============ 打卡功能已移除 ============ */
 </script>
 </body>
 </html>

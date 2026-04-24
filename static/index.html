@@ -6,16 +6,25 @@
 <title>中药鉴定学 · 刘春生老师 AI 助教</title>
 <style>
   * { box-sizing: border-box; font-style: normal; }
+  /* BUCM 北中医校色：主色深青绿 #1f4a3c，辅朱红 #a83224，点银杏金 #d4a838 */
+  :root {
+    --bucm-green: #1f4a3c;
+    --bucm-green-dark: #12302a;
+    --bucm-red: #a83224;
+    --bucm-gold: #d4a838;
+    --paper: #f7efda;
+    --ink: #1a1410;
+  }
   html, body {
     margin: 0; padding: 0; height: 100%;
     font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans CN", sans-serif;
-    color: #2b1d10;
-    background-color: #ede0c4;
+    color: var(--ink);
+    background-color: #e8dfc4;
     background-image:
-      radial-gradient(circle at 20% 30%, rgba(139, 90, 43, 0.10) 0, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(107, 52, 16, 0.08) 0, transparent 50%),
-      repeating-linear-gradient(90deg, rgba(120,80,40,0.03) 0 2px, transparent 2px 6px),
-      repeating-linear-gradient(0deg, rgba(120,80,40,0.03) 0 2px, transparent 2px 6px);
+      radial-gradient(circle at 15% 20%, rgba(31, 74, 60, 0.08) 0, transparent 55%),
+      radial-gradient(circle at 85% 80%, rgba(168, 50, 36, 0.06) 0, transparent 55%),
+      repeating-linear-gradient(90deg, rgba(80,60,30,0.03) 0 2px, transparent 2px 6px),
+      repeating-linear-gradient(0deg, rgba(80,60,30,0.03) 0 2px, transparent 2px 6px);
     overflow: hidden;
   }
 
@@ -60,10 +69,9 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
   }
   .drawer {
-    background:
-      linear-gradient(180deg, #a66a2f 0%, #8b5424 100%);
-    color: #fff7e6;
-    border: 1.5px solid #3a1a06;
+    background: linear-gradient(180deg, var(--bucm-green) 0%, var(--bucm-green-dark) 100%);
+    color: #f5e6c4;
+    border: 1.5px solid #0a1f1a;
     border-radius: 4px;
     padding: 10px 6px;
     text-align: center;
@@ -71,16 +79,16 @@
     letter-spacing: 1px;
     cursor: pointer;
     position: relative;
-    box-shadow: inset 0 0 0 1px rgba(255,230,180,.15);
+    box-shadow: inset 0 0 0 1px rgba(212,168,56,.2);
     transition: transform .15s;
   }
-  .drawer:hover { transform: translateY(-1px); background: linear-gradient(180deg, #bb7a3c 0%, #9a5e2a 100%); }
+  .drawer:hover { transform: translateY(-1px); background: linear-gradient(180deg, #2a5e4c 0%, #1a4036 100%); }
   .drawer::after {
     content: ""; position: absolute;
     bottom: 3px; left: 50%; transform: translateX(-50%);
-    width: 10px; height: 3px; background: #f5d98a;
+    width: 10px; height: 3px; background: var(--bucm-gold);
     border-radius: 2px;
-    box-shadow: 0 0 0 1px #3a1a06;
+    box-shadow: 0 0 0 1px #0a1f1a;
   }
 
   /* 名言卡片 */
@@ -148,37 +156,53 @@
     min-height: 0;
   }
 
-  /* 顶栏 */
+  /* 顶栏：北中医深青绿主色 + 金色勾边 */
   header {
-    background: linear-gradient(180deg, #7a3e16 0%, #5a2a0c 100%);
+    background: linear-gradient(180deg, var(--bucm-green) 0%, var(--bucm-green-dark) 100%);
     color: #f5e6c4;
     padding: 14px 24px;
     border-radius: 6px 6px 0 0;
-    border: 2px solid #3a1a06;
-    border-bottom: none;
-    box-shadow: 0 3px 0 #3a1a06, 0 6px 14px rgba(0,0,0,.25);
+    border: 2px solid #0a1f1a;
+    border-bottom: 3px solid var(--bucm-gold);
+    box-shadow: 0 3px 0 #0a1f1a, 0 6px 14px rgba(0,0,0,.25);
     display: flex; align-items: center; gap: 14px;
+    position: relative;
+  }
+  header::after {
+    content: "自 1956"; position: absolute;
+    right: 24px; top: 50%; transform: translateY(-50%);
+    color: rgba(212, 168, 56, 0.7); font-size: 11px;
+    letter-spacing: 2px; pointer-events: none;
   }
   .seal {
     width: 46px; height: 46px; border-radius: 6px;
-    background: #a83224; color: #fff7e6;
+    background: var(--bucm-red); color: #fff7e6;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; font-weight: 700;
-    border: 2px solid #3a1a06;
+    border: 2px solid #0a1f1a;
     box-shadow: inset 0 0 0 2px #fff7e6;
   }
+  /* 银杏叶（校园符号） */
+  .ginkgo {
+    width: 32px; height: 32px;
+    flex-shrink: 0;
+  }
   header h1 {
-    margin: 0; font-size: 20px; letter-spacing: 3px;
+    margin: 0; font-size: 19px; letter-spacing: 2px;
     font-weight: 700;
     color: #f7e8bf;
-    text-shadow: 0 1px 0 #2a1405;
+    text-shadow: 0 1px 0 #0a1f1a;
     flex: 1;
+  }
+  header h1 .sub {
+    display: block; font-size: 11px; color: var(--bucm-gold);
+    letter-spacing: 3px; margin-top: 3px; font-weight: 400;
   }
   header .badges { display: flex; gap: 6px; }
   header .badge {
-    background: rgba(255,231,180,.15);
-    color: #f5d98a;
-    border: 1px solid #a86a2a;
+    background: rgba(212, 168, 56, 0.18);
+    color: var(--bucm-gold);
+    border: 1px solid var(--bucm-gold);
     font-size: 11px;
     padding: 3px 8px; border-radius: 12px;
     letter-spacing: 1px;
@@ -211,8 +235,8 @@
     border: 1.5px solid #3a1a06;
   }
   .msg.user { flex-direction: row-reverse; }
-  .msg.user .avatar { background: #2f5233; color: #f5e6c4; }
-  .msg.assistant .avatar { background: #a83224; color: #fff7e6; box-shadow: inset 0 0 0 2px #fff7e6; }
+  .msg.user .avatar { background: var(--bucm-green); color: #f5e6c4; }
+  .msg.assistant .avatar { background: var(--bucm-red); color: #fff7e6; box-shadow: inset 0 0 0 2px #fff7e6; }
   .bubble {
     max-width: 78%; padding: 12px 16px;
     line-height: 1.85; white-space: pre-wrap;
@@ -220,35 +244,36 @@
     border: 1.5px solid #8b5a2b;
     border-radius: 4px;
   }
-  .msg.user .bubble { background: #e8eed7; border-color: #2f5233; }
+  .msg.user .bubble { background: #e0ebdb; border-color: var(--bucm-green); }
   .msg.assistant .bubble { background: #fff8e3; box-shadow: inset 0 0 0 1px #e8d7a8; }
 
-  /* 输入栏 */
+  /* 输入栏：深青绿木框 */
   .inputbar {
     display: flex; gap: 10px; padding: 14px;
-    background: repeating-linear-gradient(90deg, #6b3410 0 3px, #5a2a0c 3px 6px, #6b3410 6px 9px);
-    border: 2px solid #3a1a06;
+    background: linear-gradient(180deg, var(--bucm-green) 0%, var(--bucm-green-dark) 100%);
+    border: 2px solid #0a1f1a;
+    border-top: 3px solid var(--bucm-gold);
     border-radius: 0 0 6px 6px;
-    box-shadow: 0 3px 0 #3a1a06;
+    box-shadow: 0 3px 0 #0a1f1a;
   }
   textarea {
     flex: 1; min-height: 52px; max-height: 150px;
     padding: 10px 12px;
-    border: 1.5px solid #3a1a06;
+    border: 1.5px solid #0a1f1a;
     border-radius: 4px;
     font-family: inherit; font-size: 15px;
     font-style: normal;
     resize: vertical;
-    background: #fdf6e0;
-    color: #2b1d10;
+    background: var(--paper);
+    color: var(--ink);
     line-height: 1.6;
   }
-  textarea:focus { outline: none; border-color: #a83224; box-shadow: 0 0 0 2px rgba(168,50,36,.3); }
+  textarea:focus { outline: none; border-color: var(--bucm-gold); box-shadow: 0 0 0 2px rgba(212, 168, 56, 0.35); }
   button {
     padding: 0 20px;
-    background: #a83224;
+    background: var(--bucm-red);
     color: #fff7e6;
-    border: 1.5px solid #3a1a06;
+    border: 1.5px solid #0a1f1a;
     border-radius: 4px;
     font-size: 15px;
     font-family: inherit;
@@ -258,9 +283,9 @@
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
   }
   button:hover { background: #c04032; }
-  button:disabled { background: #8a6656; cursor: not-allowed; }
-  button.clear { background: #5a5040; letter-spacing: 1px; }
-  button.clear:hover { background: #6b5f4c; }
+  button:disabled { background: #7a6656; cursor: not-allowed; }
+  button.clear { background: #3a4a42; letter-spacing: 1px; }
+  button.clear:hover { background: #526058; }
 
   .hint { color: #6b4a24; font-size: 12px; padding: 8px 2px 2px; letter-spacing: .5px; }
 
@@ -290,6 +315,21 @@
 
   <!-- ============ 左侧 ============ -->
   <aside class="side">
+    <!-- 北中医校训 -->
+    <div class="panel" style="border-color: var(--bucm-green); background: linear-gradient(135deg, #fff8e3 0%, #e8ede0 100%);">
+      <h3 style="color: var(--bucm-green); border-bottom-color: var(--bucm-green);">
+        <span class="dot" style="background: var(--bucm-green);"></span>北中医校训
+      </h3>
+      <div style="text-align: center; padding: 8px 0;">
+        <div style="font-size: 20px; color: var(--bucm-green); font-weight: 700; letter-spacing: 8px; line-height: 1.6;">
+          勤求博采<br/>厚德济生
+        </div>
+        <div style="font-size: 11px; color: #6b4a24; margin-top: 10px; letter-spacing: 2px;">
+          北京中医药大学 · 1956
+        </div>
+      </div>
+    </div>
+
     <!-- 今日推荐 -->
     <div class="daily panel">
       <div class="name">人参 Rénshēn</div>
@@ -327,8 +367,15 @@
   <!-- ============ 中间主区 ============ -->
   <div class="main">
     <header>
+      <svg class="ginkgo" viewBox="0 0 64 64" fill="none">
+        <path d="M32 6 C22 16, 14 24, 14 34 C14 42, 20 48, 32 48 C44 48, 50 42, 50 34 C50 24, 42 16, 32 6 Z M32 24 L30 48 M32 24 L34 48 M32 20 L26 46 M32 20 L38 46" stroke="#d4a838" stroke-width="1.8" stroke-linecap="round" fill="rgba(212,168,56,0.18)"/>
+        <path d="M32 48 L32 58 M28 58 L36 58" stroke="#d4a838" stroke-width="2" stroke-linecap="round"/>
+      </svg>
       <div class="seal">药</div>
-      <h1>中药鉴定学 · 刘春生老师 AI 助教</h1>
+      <h1>
+        中药鉴定学 · 刘春生老师 AI 助教
+        <span class="sub">北京中医药大学 · 中药学院 · 岐黄传承</span>
+      </h1>
       <div class="badges">
         <span class="badge">在线</span>
         <span class="badge">京腔版</span>
@@ -360,6 +407,21 @@
 
   <!-- ============ 右侧 ============ -->
   <aside class="side">
+    <!-- 杏林印记 -->
+    <div class="panel" style="background: linear-gradient(135deg, #1f4a3c 0%, #12302a 100%); color: #f5e6c4; border-color: #0a1f1a;">
+      <h3 style="color: var(--bucm-gold); border-bottom-color: rgba(212,168,56,0.4);">
+        <span class="dot" style="background: var(--bucm-gold);"></span>杏林·岐黄
+      </h3>
+      <div style="font-size: 12px; line-height: 1.9; color: #e8dcb4;">
+        "医者，意也。药者，瀹也。"<br/>
+        研岐黄，识百草，知寒热，辨阴阳。<br/>
+        一味药材，一段传承。
+      </div>
+      <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(212,168,56,0.4); font-size: 11px; color: var(--bucm-gold); letter-spacing: 2px; text-align: center;">
+        中药学院 · 中药鉴定教研室
+      </div>
+    </div>
+
     <!-- 刘老师金句 -->
     <div class="panel">
       <h3><span class="dot"></span>老师金句</h3>

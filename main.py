@@ -113,7 +113,7 @@ async def api_chat(req: ChatRequest, request: Request):
         text = await generate(
             req.prompt, history=history_dicts,
             temperature=req.temperature, think=req.think,
-            image_data=req.image,
+            image_data=req.image, user_name=user_name,
         )
         log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
         return {"content": text}
@@ -124,7 +124,7 @@ async def api_chat(req: ChatRequest, request: Request):
             async for token in generate_stream(
                 req.prompt, history=history_dicts,
                 temperature=req.temperature, think=req.think,
-                image_data=req.image,
+                image_data=req.image, user_name=user_name,
             ):
                 full_answer += token
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"

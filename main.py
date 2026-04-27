@@ -365,13 +365,20 @@ async def admin_accounts_delete(req: AccountDelReq):
 
 # 静态资源
 static_dir = Path(__file__).parent / "static"
+
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     @app.get("/")
     async def index():
-        return FileResponse(static_dir / "index.html")
+        return FileResponse(static_dir / "index.html", headers=NO_CACHE_HEADERS)
 
     @app.get("/admin")
     async def admin_page():
-        return FileResponse(static_dir / "admin.html")
+        return FileResponse(static_dir / "admin.html", headers=NO_CACHE_HEADERS)

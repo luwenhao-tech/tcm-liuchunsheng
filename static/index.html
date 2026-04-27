@@ -806,6 +806,18 @@
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");
 
+/* ============ 自动清理：旧版用户的 localStorage 残留 ============ */
+/* 老用户曾经只填姓名就进了，他们 localStorage 里有 tcm_user_name 但没 tcm_token，
+   清掉这些遗留，让他们看到新的登录页。 */
+(function purgeStaleLogin() {
+  const name = localStorage.getItem("tcm_user_name");
+  const token = localStorage.getItem("tcm_token");
+  if (name && !token) {
+    localStorage.removeItem("tcm_user_name");
+    localStorage.removeItem("tcm_user_id");
+  }
+})();
+
 /* ============ 登录 ============ */
 (function initLogin(){
   const saved = localStorage.getItem("tcm_user_name");

@@ -14,7 +14,7 @@ from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse, JSO
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from llm_client import generate_stream, generate
+from llm_client import generate_stream, generate, vision_client
 
 app = FastAPI(title="中药鉴定学 - 刘春生教授 AI 助教")
 
@@ -136,6 +136,12 @@ async def api_chat(req: ChatRequest, request: Request):
             log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, full_answer, req.think, int((time.time() - started) * 1000))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@app.get("/api/features")
+async def api_features():
+    """前端启动时查询哪些可选功能（如视觉）可用。"""
+    return {"vision": vision_client is not None}
 
 
 # ============ 管理后台 ============

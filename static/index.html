@@ -368,7 +368,21 @@
     box-shadow: 0 2px 6px rgba(0,0,0,.04);
     border-bottom-left-radius: 4px;
   }
-  .bubble strong { font-weight: 900; color: #a83224; font-family: "PingFang SC Heavy", "Microsoft YaHei", "Heiti SC", "SimHei", sans-serif; }
+  .bubble strong { font-weight: 900; color: #ff6b5a; font-family: "PingFang SC Heavy", "Microsoft YaHei", "Heiti SC", "SimHei", sans-serif; }
+  .msg.assistant { position: relative; }
+  .msg.assistant .copy-btn {
+    position: absolute; right: 8px; bottom: 4px;
+    background: rgba(255,255,255,.7);
+    border: 1px solid #d4e0d9;
+    color: #5a8b7a;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0; transition: opacity .15s;
+  }
+  .msg.assistant:hover .copy-btn { opacity: 1; }
+  .msg.assistant .copy-btn:hover { background: #fff; color: var(--bucm-green); }
 
   /* 思考中提示 */
   .thinking-tip { display: inline-flex; align-items: center; }
@@ -668,6 +682,10 @@
       <button class="mini" id="histClose">关闭</button>
     </div>
   </div>
+  <div style="padding:8px 14px 4px;">
+    <input id="histSearch" type="text" placeholder="🔍 搜索历史…（药名、关键词都行）"
+      style="width:100%;padding:8px 12px;border:1.5px solid #d4e0d9;border-radius:18px;font-size:13px;outline:none;background:#fafdfb;font-family:inherit;box-sizing:border-box;"/>
+  </div>
   <div class="hist-list" id="histList"></div>
 </aside>
 
@@ -732,6 +750,14 @@ const chat = $("chat");
   };
 })();
 
+/* ============ 可选功能探测：视觉模型未配置时隐藏 📷 ============ */
+fetch("/api/features").then(r => r.json()).then(d => {
+  if (!d.vision) {
+    const b = document.getElementById("imgBtn");
+    if (b) b.style.display = "none";
+  }
+}).catch(() => {});
+
 /* ============ 欢迎页快捷提问（每次刷新随机抽 5 题）============ */
 const QUICK_QUESTIONS = [
   // 性状鉴别类
@@ -763,10 +789,14 @@ const QUICK_QUESTIONS = [
 function renderQuickQuestions() {
   const box = document.getElementById("quickBox");
   if (!box) return;
-  // Fisher-Yates 洗牌随机抽 5 个
+  // 按日期 + 用户名做种子：同一天/同一人看到的 5 道是稳定的，第二天换
+  const seedStr = (localStorage.getItem("tcm_user_name") || "guest") + "_" + new Date().toDateString();
+  let seed = 0;
+  for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
   const arr = QUICK_QUESTIONS.slice();
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    seed = (seed * 1103515245 + 12345) >>> 0;
+    const j = seed % (i + 1);
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   box.innerHTML = arr.slice(0, 5).map(q => `<span>${q}</span>`).join("");
@@ -997,13 +1027,19 @@ function formatTime(ts) {
 }
 function renderHistList() {
   const listEl = $("histList");
-  const sessions = loadSessions();
+  let sessions = loadSessions();
+  const kw = ($("histSearch")?.value || "").trim().toLowerCase();
+  if (kw) {
+    sessions = sessions.filter(s => {
+      if ((s.title || "").toLowerCase().includes(kw)) return true;
+      return (s.messages || []).some(m => (m.content || "").toLowerCase().includes(kw));
+    });
+  }
   if (sessions.length === 0) {
     listEl.innerHTML = `
       <div class="hist-empty">
-        <div class="icon">📭</div>
-        还没有历史对话。<br/>
-        聊两句，这里就能看到了～
+        <div class="icon">${kw ? "🔍" : "📭"}</div>
+        ${kw ? `没找到包含"${escapeHtml(kw)}"的对话。` : "还没有历史对话。<br/>聊两句，这里就能看到了～"}
       </div>`;
     return;
   }
@@ -1148,7 +1184,15 @@ async function send() {
             bubble.textContent = full;
             chat.scrollTop = chat.scrollHeight;
           }
-          if (obj.error) bubble.textContent += "\n[错误] " + obj.error;
+          if (obj.error) {
+            const raw = String(obj.error || "");
+            let friendly = "刘老师这会儿翻医书呢，您稍候再问一遍。";
+            if (/timeout|timed.*out|ETIMEDOUT/i.test(raw)) friendly = "网络有点慢，老师没来得及回话——再点一次试试。";
+            else if (/429|rate.?limit|too many/i.test(raw)) friendly = "今儿来问的同学多，请隔几秒再问。";
+            else if (/401|403|unauthorized|api.?key/i.test(raw)) friendly = "API 凭证失效，请联系管理员。";
+            else if (/insufficient|quota|余额/i.test(raw)) friendly = "API 额度不够了，麻烦联系管理员充值。";
+            bubble.innerHTML = `<span style="color:#c44a3a;">⚠️ ${friendly}</span>`;
+          }
         } catch (e) {}
       }
     }
@@ -1156,6 +1200,20 @@ async function send() {
     bubble.innerHTML = escapeHtml(full)
       .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
       .replace(/「([^」\n]+)」/g, '<strong>$1</strong>');
+    // 注入复制按钮
+    if (full.trim()) {
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "copy-btn";
+      copyBtn.textContent = "📋 复制";
+      copyBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        navigator.clipboard?.writeText(full).then(() => {
+          copyBtn.textContent = "✓ 已复制";
+          setTimeout(() => copyBtn.textContent = "📋 复制", 1500);
+        });
+      };
+      bubble.parentElement.appendChild(copyBtn);
+    }
     history.push({ role: "user", content: prompt });
     history.push({ role: "assistant", content: full });
     if (history.length > 40) history = history.slice(-40);
@@ -1189,6 +1247,7 @@ $("prompt").addEventListener("keydown", (e) => {
 /* 历史记录按钮事件 */
 $("histBtn").onclick = openHist;
 $("histClose").onclick = closeHist;
+$("histSearch")?.addEventListener("input", () => renderHistList());
 $("histMask").onclick = closeHist;
 $("histClearAll").onclick = () => {
   if (!confirm("确定清空所有历史对话吗？此操作不可恢复。")) return;

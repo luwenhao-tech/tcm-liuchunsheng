@@ -1475,24 +1475,6 @@ function setUser(u) { localStorage.setItem(USER_KEY, JSON.stringify(u)); }
 function showLogin() { $("loginMask").style.display = "flex"; }
 function hideLogin() { $("loginMask").style.display = "none"; }
 
-(function initLogin() {
-  const u = getUser();
-  if (u && u.name) {
-    hideLogin();
-  } else {
-    showLogin();
-  }
-  $("loginBtn").onclick = () => {
-    const name = ($("loginName").value || "").trim();
-    const sid = ($("loginId").value || "").trim();
-    if (!name) { $("loginName").focus(); $("loginName").style.borderColor = "#a83224"; return; }
-    setUser({ name, sid, loginAt: Date.now() });
-    hideLogin();
-  };
-  $("loginName").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
-  $("loginId").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
-})();
-
 /* ============ 打卡功能已移除 ============ */
 </script>
 </body>

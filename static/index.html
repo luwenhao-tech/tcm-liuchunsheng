@@ -546,6 +546,7 @@
 
     <div class="inputbar">
       <textarea id="prompt" placeholder="您说话，Enter 发送，Shift+Enter 换行"></textarea>
+      <button id="thinkToggle" type="button" title="开启后用推理模型，回答更深入但稍慢" style="background:#fff;color:#3a8f7a;border:1.5px solid #3a8f7a;border-radius:20px;padding:0 12px;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:1px;height:42px;flex-shrink:0;white-space:nowrap;">🧠 深度思考</button>
       <button id="send">发送</button>
       <button id="clear" class="clear">清空</button>
     </div>
@@ -659,6 +660,26 @@
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");
 let history = [];
+
+/* ============ 深度思考开关 ============ */
+let thinkMode = false;
+const thinkBtn = $("thinkToggle");
+if (thinkBtn) {
+  thinkBtn.addEventListener("click", () => {
+    thinkMode = !thinkMode;
+    if (thinkMode) {
+      thinkBtn.style.background = "#3a8f7a";
+      thinkBtn.style.color = "#fff";
+      thinkBtn.style.boxShadow = "0 2px 8px rgba(58,143,122,0.35)";
+      thinkBtn.textContent = "🧠 深度思考·开";
+    } else {
+      thinkBtn.style.background = "#fff";
+      thinkBtn.style.color = "#3a8f7a";
+      thinkBtn.style.boxShadow = "none";
+      thinkBtn.textContent = "🧠 深度思考";
+    }
+  });
+}
 
 /* ============ 历史记录管理 ============ */
 const HIST_KEY = "tcm_chat_sessions_v1";
@@ -779,7 +800,7 @@ async function send() {
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ prompt, history, stream: true }),
+      body: JSON.stringify({ prompt, history, stream: true, think: thinkMode }),
     });
 
     const reader = resp.body.getReader();

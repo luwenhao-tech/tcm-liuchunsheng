@@ -11,6 +11,7 @@ load_dotenv()
 API_KEY = os.getenv("LLM_API_KEY", "")
 BASE_URL = os.getenv("LLM_BASE_URL", "https://api.deepseek.com/v1")
 MODEL = os.getenv("LLM_MODEL", "deepseek-chat")
+REASONING_MODEL = os.getenv("LLM_REASONING_MODEL", "deepseek-reasoner")
 
 if not API_KEY:
     raise RuntimeError("请在 .env 中设置 LLM_API_KEY")
@@ -73,19 +74,19 @@ async def generate_stream(
     system_prompt: Optional[str] = None,
     history: Optional[List[Dict[str, str]]] = None,
     temperature: float = 0.6,
+    think: bool = False,
 ) -> AsyncGenerator[str, None]:
-    """流式生成内容，yield 每个增量 token。"""
+    """流式生成内容，yield 每个增量 token。think=True 时切换到推理模型。"""
     messages = [{"role": "system", "content": system_prompt or LIU_CHUNSHENG_SYSTEM_PROMPT}]
     if history:
         messages.extend(history)
     messages.append({"role": "user", "content": user_prompt})
 
-    stream = await client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        temperature=temperature,
-        stream=True,
-    )
+    model = REASONING_MODEL if think else MODEL
+    kwargs = {"model": model, "messages": messages, "stream": True}
+    if not think:
+        kwargs["temperature"] = temperature
+    stream = await client.chat.completions.create(**kwargs)
     async for chunk in stream:
         if chunk.choices and chunk.choices[0].delta.content:
             yield chunk.choices[0].delta.content
@@ -96,15 +97,16 @@ async def generate(
     system_prompt: Optional[str] = None,
     history: Optional[List[Dict[str, str]]] = None,
     temperature: float = 0.6,
+    think: bool = False,
 ) -> str:
-    """一次性返回完整内容（非流式）。"""
+    """一次性返回完整内容（非流式）。think=True 时切换到推理模型。"""
     messages = [{"role": "system", "content": system_prompt or LIU_CHUNSHENG_SYSTEM_PROMPT}]
     if history:
         messages.extend(history)
     messages.append({"role": "user", "content": user_prompt})
-    resp = await client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        temperature=temperature,
-    )
+    model = REASONING_MODEL if think else MODEL
+    kwargs = {"model": model, "messages": messages}
+    if not think:
+        kwargs["temperature"] = temperature
+    resp = await client.chat.completions.create(**kwargs)
     return resp.choices[0].message.content or ""

@@ -32,6 +32,7 @@ class ChatRequest(BaseModel):
     history: Optional[List[Message]] = None
     temperature: float = 0.6
     stream: bool = True
+    think: bool = False
 
 
 @app.post("/api/chat")
@@ -44,13 +45,17 @@ async def api_chat(req: ChatRequest):
     )
 
     if not req.stream:
-        text = await generate(req.prompt, history=history_dicts, temperature=req.temperature)
+        text = await generate(
+            req.prompt, history=history_dicts,
+            temperature=req.temperature, think=req.think,
+        )
         return {"content": text}
 
     async def event_stream():
         try:
             async for token in generate_stream(
-                req.prompt, history=history_dicts, temperature=req.temperature
+                req.prompt, history=history_dicts,
+                temperature=req.temperature, think=req.think,
             ):
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"

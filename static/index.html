@@ -54,6 +54,12 @@
     padding: 8px 11px;
     box-shadow: 0 2px 8px rgba(58, 143, 122, 0.06);
     flex-shrink: 0;
+    transition: box-shadow .2s, transform .2s, border-color .2s;
+  }
+  .panel:hover {
+    box-shadow: 0 4px 16px rgba(92, 196, 167, 0.18);
+    border-color: #a9dfcc;
+    transform: translateY(-1px);
   }
   .panel h3 {
     margin: 0 0 8px; font-size: 12.5px;
@@ -450,8 +456,9 @@
   .hint { color: #6b4a24; font-size: 12px; padding: 8px 2px 2px; letter-spacing: .5px; }
 
   /* 欢迎区 */
-  .welcome { color: #5a3a14; text-align: center; padding: 40px 20px; font-size: 15px; line-height: 2; }
-  .welcome .big { font-size: 20px; color: #6b2a10; letter-spacing: 2px; font-weight: 700; margin-bottom: 10px; }
+  .welcome { color: #5a3a14; text-align: center; padding: 40px 20px; font-size: 15px; line-height: 2; animation: welcomeIn .5s ease; }
+  .welcome .big { font-size: 22px; background: linear-gradient(135deg, #ff8a76 0%, #ffb37a 50%, #5cc4a7 100%); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: 3px; font-weight: 800; margin-bottom: 12px; }
+  @keyframes welcomeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .quick { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; justify-content: center; }
   .quick span {
     background: #fff8e3; border: 1.5px solid #8b5a2b;
@@ -489,8 +496,9 @@
     .sub { display: none !important; }
     .hist-btn { padding: 4px 8px !important; font-size: 11px !important; }
   }
-#loginMask { display: flex; }
-#loginMask.hidden { display: none !important; }
+#loginMask { display: flex; transition: opacity .35s; }
+#loginMask.hidden { opacity: 0; pointer-events: none; display: flex !important; }
+#loginMask.gone { display: none !important; }
 .user-chip {
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(255, 217, 122, 0.25);
@@ -501,6 +509,13 @@
   font-size: 13px;
   letter-spacing: 1px;
   margin-left: 6px;
+  transition: background .2s, transform .2s;
+  animation: chipFadeIn .4s ease;
+}
+.user-chip:hover { background: rgba(255, 217, 122, 0.4); transform: translateY(-1px); }
+@keyframes chipFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .user-chip .logout {
   cursor: pointer; opacity: .7; font-size: 11px;
@@ -725,6 +740,7 @@ const chat = $("chat");
   };
   if (saved) {
     mask.classList.add("hidden");
+    mask.classList.add("gone");
     showChip(saved);
   }
   $("loginBtn").onclick = () => {
@@ -734,6 +750,7 @@ const chat = $("chat");
     localStorage.setItem("tcm_user_name", name);
     if (id) localStorage.setItem("tcm_user_id", id);
     mask.classList.add("hidden");
+    setTimeout(() => mask.classList.add("gone"), 350);
     showChip(name);
   };
   $("loginName").addEventListener("keydown", (e) => {
@@ -1038,8 +1055,8 @@ function renderHistList() {
   if (sessions.length === 0) {
     listEl.innerHTML = `
       <div class="hist-empty">
-        <div class="icon">${kw ? "🔍" : "📭"}</div>
-        ${kw ? `没找到包含"${escapeHtml(kw)}"的对话。` : "还没有历史对话。<br/>聊两句，这里就能看到了～"}
+        <div class="icon">${kw ? "🔍" : "📜"}</div>
+        ${kw ? `没找到包含"${escapeHtml(kw)}"的对话。` : `还没有历史对话。<br/>聊两句，这里就能看到了～<br/><span style="display:inline-block;margin-top:14px;padding:8px 14px;border-top:1px dashed #d4e0d9;font-size:11px;color:#a89a6a;letter-spacing:1.5px;line-height:1.8;">『读医书三年，<br/>便谓天下无病可医；<br/>治病三年，<br/>方知天下无方可用。』<br/><span style="opacity:.6;font-size:10px;">— 张仲景</span></span>`}
       </div>`;
     return;
   }

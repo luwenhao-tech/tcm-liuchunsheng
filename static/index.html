@@ -107,13 +107,14 @@
   .quote .mark { color: #a83224; font-size: 18px; font-weight: 700; }
 
   /* tag 标签 */
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
   .tag {
     background: #f5e6c4;
     border: 1px solid #c9a771;
     color: #6b2a10;
-    padding: 3px 10px; border-radius: 12px;
-    font-size: 12px; cursor: pointer;
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; cursor: pointer;
+    line-height: 1.5;
   }
   .tag:hover { background: #ecd49a; }
   .tag.green { background: #e8eed7; border-color: #7a9461; color: #2f5233; }
@@ -599,8 +600,8 @@
     </div>
 
     <!-- 关键词 -->
-    <div class="panel">
-      <h3><span class="dot"></span>经验鉴别词</h3>
+    <div class="panel" style="padding:6px 10px;">
+      <h3 style="margin-bottom:6px;"><span class="dot"></span>经验鉴别词</h3>
       <div class="tags">
         <span class="tag red" data-q="什么是菊花心？举例">菊花心</span>
         <span class="tag" data-q="哪些药材有朱砂点？">朱砂点</span>

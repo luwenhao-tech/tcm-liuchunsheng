@@ -39,21 +39,23 @@
 
   /* ---------- 侧边栏（药柜风） ---------- */
   .side {
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 2px 4px 8px 2px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 2px 4px 4px 2px;
     height: 100%;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: visible;
     scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .side::-webkit-scrollbar { width: 0; height: 0; display: none; }
-  .side .panel:last-child { margin-top: auto; }
+  .side .panel:last-child { margin-top: auto; margin-bottom: 0; }
 
   .panel {
     background: #fff;
     border: 1.5px solid #e4dfcc;
     border-radius: 10px;
-    padding: 10px 12px;
+    padding: 8px 11px;
     box-shadow: 0 2px 8px rgba(58, 143, 122, 0.06);
     flex-shrink: 0;
   }

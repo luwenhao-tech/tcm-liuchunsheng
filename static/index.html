@@ -827,7 +827,7 @@ async function send() {
     "甭急甭急，这就好……"
   ];
   const phrase = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
-  bubble.innerHTML = `<span class="thinking-tip" style="color:#8b6f3a;font-style:italic;letter-spacing:1px;">${phrase}<span class="dots"></span></span>`;
+  bubble.innerHTML = `<span class="thinking-tip" style="color:#8b6f3a;letter-spacing:1px;">${phrase}<span class="dots"></span></span>`;
   let firstToken = true;
 
   try {

@@ -3,6 +3,7 @@
 """
 import json
 import os
+import secrets
 import sqlite3
 import time
 from datetime import datetime, timedelta
@@ -61,6 +62,80 @@ def init_db():
 init_db()
 
 
+# ============ 账号系统 ============
+ACCOUNTS_PATH = Path(__file__).parent / "accounts.json"
+TOKENS: Dict[str, Dict] = {}  # token -> {account, name, expires}
+TOKEN_TTL = 7 * 24 * 3600  # 7 天
+
+
+def load_accounts() -> Dict[str, str]:
+    """读取 accounts.json：{ "account": "password", ... }"""
+    if not ACCOUNTS_PATH.exists():
+        return {}
+    try:
+        with open(ACCOUNTS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return {k.strip(): str(v) for k, v in data.items() if not k.startswith("_")}
+        if isinstance(data, list):
+            return {item["account"].strip(): str(item["password"]) for item in data if "account" in item}
+        return {}
+    except Exception as e:
+        print(f"[load_accounts error] {e}")
+        return {}
+
+
+def issue_token(account: str, name: str) -> str:
+    tk = secrets.token_urlsafe(24)
+    TOKENS[tk] = {
+        "account": account,
+        "name": name,
+        "expires": time.time() + TOKEN_TTL,
+    }
+    return tk
+
+
+def verify_token(token: Optional[str]) -> Optional[Dict]:
+    if not token:
+        return None
+    info = TOKENS.get(token)
+    if not info:
+        return None
+    if info["expires"] < time.time():
+        TOKENS.pop(token, None)
+        return None
+    return info
+
+
+class LoginRequest(BaseModel):
+    account: str
+    password: str
+    name: Optional[str] = ""
+
+
+@app.post("/api/login")
+async def api_login(req: LoginRequest):
+    accounts = load_accounts()
+    acc = req.account.strip()
+    if not acc or acc not in accounts:
+        raise HTTPException(401, "账号不存在")
+    if accounts[acc] != req.password:
+        raise HTTPException(401, "密码错误")
+    name = (req.name or "").strip()[:32] or acc
+    token = issue_token(acc, name)
+    return {"token": token, "account": acc, "name": name}
+
+
+def require_user(authorization: Optional[str] = Header(None)) -> Dict:
+    if not authorization:
+        raise HTTPException(401, "请先登录")
+    token = authorization.replace("Bearer ", "").strip()
+    info = verify_token(token)
+    if not info:
+        raise HTTPException(401, "登录已过期，请重新登录")
+    return info
+
+
 def log_chat(ip: str, ua: str, user_name: str, user_id: str, prompt: str, answer: str, think: bool, duration_ms: int):
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -91,7 +166,7 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/api/chat")
-async def api_chat(req: ChatRequest, request: Request):
+async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(require_user)):
     if not req.prompt.strip() and not req.image:
         raise HTTPException(400, "问题不能为空")
 
@@ -102,8 +177,9 @@ async def api_chat(req: ChatRequest, request: Request):
     client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "")
     client_ip = client_ip.split(",")[0].strip()
     user_agent = request.headers.get("user-agent", "")
-    user_name = (req.user_name or "").strip()[:32]
-    user_id = (req.user_id or "").strip()[:32]
+    # 用 token 里的 account/name 而不是前端自报，杜绝伪造
+    user_name = user["name"][:32]
+    user_id = user["account"][:32]
     started = time.time()
 
     # 日志里的 prompt 标记是否带图

@@ -543,14 +543,19 @@
     <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">同学姓名</label>
     <input id="loginName" type="text" placeholder="请输入您的姓名" autocomplete="off"
       style="width:100%;padding:11px 14px;border:1.5px solid #c9a771;border-radius:8px;background:#fff;font-size:14px;color:#3d2a14;outline:none;box-sizing:border-box;margin-bottom:14px;"/>
-    <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">学号 / 班级（选填）</label>
-    <input id="loginId" type="text" placeholder="如：中药2101 / 20210xxxx" autocomplete="off"
+    <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">账号</label>
+    <input id="loginAccount" type="text" placeholder="老师发给您的账号" autocomplete="username"
+      style="width:100%;padding:11px 14px;border:1.5px solid #c9a771;border-radius:8px;background:#fff;font-size:14px;color:#3d2a14;outline:none;box-sizing:border-box;margin-bottom:14px;"/>
+    <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">密码</label>
+    <input id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password"
       style="width:100%;padding:11px 14px;border:1.5px solid #c9a771;border-radius:8px;background:#fff;font-size:14px;color:#3d2a14;outline:none;box-sizing:border-box;margin-bottom:20px;"/>
     <button id="loginBtn" style="width:100%;padding:12px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--bucm-green),#4ea693);color:#fff8e3;font-size:15px;font-weight:600;letter-spacing:6px;cursor:pointer;box-shadow:0 4px 12px rgba(58,143,122,.3);">
       进入学堂
     </button>
+    <div id="loginErr" style="margin-top:10px;font-size:12px;color:#c44a3a;text-align:center;letter-spacing:1px;display:none;"></div>
     <div id="loginTip" style="margin-top:14px;font-size:11px;color:#8a6a3a;text-align:center;letter-spacing:1px;line-height:1.7;">
-      勤求博采 · 厚德济生
+      勤求博采 · 厚德济生<br/>
+      <span style="font-size:10px;color:#a89a6a;">未获得账号？请联系刘春生教授</span>
     </div>
   </div>
 </div>
@@ -804,37 +809,69 @@ const chat = $("chat");
 /* ============ 登录 ============ */
 (function initLogin(){
   const saved = localStorage.getItem("tcm_user_name");
+  const token = localStorage.getItem("tcm_token");
   const mask = $("loginMask");
   const chip = $("userChip");
+  const errEl = $("loginErr");
+  const showErr = (msg) => {
+    if (!errEl) return;
+    errEl.textContent = msg;
+    errEl.style.display = "block";
+  };
+  const hideErr = () => { if (errEl) errEl.style.display = "none"; };
   const showChip = (name) => {
     $("userName").textContent = "👤 " + name;
     chip.style.display = "inline-flex";
     const big = document.getElementById("welcomeBig");
     if (big) big.textContent = `${name} 同学来啦？`;
   };
-  if (saved) {
+  if (saved && token) {
     mask.classList.add("hidden");
     mask.classList.add("gone");
     showChip(saved);
   }
-  $("loginBtn").onclick = () => {
+  $("loginBtn").onclick = async () => {
+    hideErr();
     const name = $("loginName").value.trim();
+    const account = $("loginAccount").value.trim();
+    const password = $("loginPassword").value;
     if (!name) { $("loginName").focus(); $("loginName").style.borderColor = "#ff8a76"; return; }
-    const id = $("loginId").value.trim();
-    localStorage.setItem("tcm_user_name", name);
-    if (id) localStorage.setItem("tcm_user_id", id);
-    mask.classList.add("hidden");
-    setTimeout(() => mask.classList.add("gone"), 350);
-    showChip(name);
+    if (!account) { $("loginAccount").focus(); $("loginAccount").style.borderColor = "#ff8a76"; return; }
+    if (!password) { $("loginPassword").focus(); $("loginPassword").style.borderColor = "#ff8a76"; return; }
+    $("loginBtn").disabled = true;
+    $("loginBtn").textContent = "验证中…";
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account, password, name }),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.detail || "登录失败");
+      }
+      const d = await r.json();
+      localStorage.setItem("tcm_token", d.token);
+      localStorage.setItem("tcm_user_name", d.name);
+      localStorage.setItem("tcm_user_id", d.account);
+      mask.classList.add("hidden");
+      setTimeout(() => mask.classList.add("gone"), 350);
+      showChip(d.name);
+    } catch (e) {
+      showErr(e.message || "登录失败，请检查账号密码");
+    } finally {
+      $("loginBtn").disabled = false;
+      $("loginBtn").textContent = "进入学堂";
+    }
   };
-  $("loginName").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") $("loginBtn").click();
-  });
-  $("loginId").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") $("loginBtn").click();
+  ["loginName","loginAccount","loginPassword"].forEach(id => {
+    $(id).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") $("loginBtn").click();
+    });
   });
   $("logoutBtn").onclick = () => {
-    if (!confirm("退出后需要重新输入姓名，确定吗？")) return;
+    if (!confirm("退出后需要重新登录，确定吗？")) return;
+    localStorage.removeItem("tcm_token");
     localStorage.removeItem("tcm_user_name");
     localStorage.removeItem("tcm_user_id");
     location.reload();
@@ -1253,13 +1290,25 @@ async function send() {
   try {
     const resp = await fetch("/api/chat", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + (localStorage.getItem("tcm_token") || ""),
+      },
       body: JSON.stringify({
         prompt, history, stream: true, think: thinkMode, image,
         user_name: localStorage.getItem("tcm_user_name") || "",
         user_id: localStorage.getItem("tcm_user_id") || "",
       }),
     });
+
+    if (resp.status === 401) {
+      bubble.innerHTML = `<span style="color:#c44a3a;">⚠️ 登录已过期，请重新登录</span>`;
+      setTimeout(() => {
+        localStorage.removeItem("tcm_token");
+        location.reload();
+      }, 1500);
+      return;
+    }
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder("utf-8");

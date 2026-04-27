@@ -361,6 +361,23 @@
   .msg.assistant .bubble { background: #fff8e3; color: #3a2410; box-shadow: 0 2px 6px rgba(0,0,0,.04); }
   .bubble strong { font-weight: 900; color: #a83224; font-family: "PingFang SC Heavy", "Microsoft YaHei", "Heiti SC", "SimHei", sans-serif; }
 
+  /* 思考中提示 */
+  .thinking-tip { display: inline-flex; align-items: center; }
+  .thinking-tip .dots::after {
+    content: "";
+    display: inline-block;
+    width: 1.4em;
+    text-align: left;
+    animation: thinkDots 1.4s steps(4, end) infinite;
+  }
+  @keyframes thinkDots {
+    0%   { content: ""; }
+    25%  { content: "·"; }
+    50%  { content: "··"; }
+    75%  { content: "···"; }
+    100% { content: ""; }
+  }
+
   /* 输入栏：变窄，青春薄荷配色 */
   .inputbar {
     display: flex; gap: 8px; padding: 8px 10px;
@@ -796,6 +813,23 @@ async function send() {
   const bubble = addMsg("assistant", "");
   $("send").disabled = true;
 
+  /* 京味儿"思考中"提示 */
+  const thinkingPhrases = thinkMode ? [
+    "嘿，您先候着，老师正琢磨这事儿呢……",
+    "稍等稍等，咱得把这味药掰扯清楚了再说……",
+    "您甭急，这道题得多想想，错不了……",
+    "得嘞，老师正翻药典找答案呢……",
+    "您坐稳了，这就给您捋一捋……"
+  ] : [
+    "嘿，您稍等，老师这就答……",
+    "得嘞，马上来……",
+    "您稍候，正给您写呢……",
+    "甭急甭急，这就好……"
+  ];
+  const phrase = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
+  bubble.innerHTML = `<span class="thinking-tip" style="color:#8b6f3a;font-style:italic;letter-spacing:1px;">${phrase}<span class="dots"></span></span>`;
+  let firstToken = true;
+
   try {
     const resp = await fetch("/api/chat", {
       method: "POST",
@@ -820,6 +854,7 @@ async function send() {
         try {
           const obj = JSON.parse(data);
           if (obj.token) {
+            if (firstToken) { bubble.textContent = ""; firstToken = false; }
             full += obj.token;
             bubble.textContent = full;
             chat.scrollTop = chat.scrollHeight;

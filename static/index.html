@@ -49,6 +49,7 @@
     -ms-overflow-style: none;
   }
   .side::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  .side > .panel:last-child { margin-top: auto; }
 
   .panel {
     background: #fff;
@@ -511,6 +512,21 @@
     <div class="panel">
       <h3><span class="dot"></span>今日考点</h3>
       <div class="quote" id="dailyExamBox" style="line-height:1.75;font-size:12.5px;"></div>
+    </div>
+
+    <!-- 学习路径 -->
+    <div class="panel" style="background: linear-gradient(135deg, #fff8e3 0%, #f3ebd0 100%); border-color: #d4a838;">
+      <h3 style="color:#8b5a2b;border-bottom-color:#d4c89c;"><span class="dot" style="background:#a83224;"></span>学习路径</h3>
+      <div class="quote" style="font-size:12.5px;line-height:1.95;color:#5a3a14;">
+        <strong style="color:#a83224;">一阶 · 总论</strong>：依据、取样、四大鉴别<br/>
+        <strong style="color:#a83224;">二阶 · 性状</strong>：形色气味 + 经验术语<br/>
+        <strong style="color:#a83224;">三阶 · 显微</strong>：横切、粉末、组织特征<br/>
+        <strong style="color:#a83224;">四阶 · 理化</strong>：水试、火试、薄层<br/>
+        <strong style="color:#a83224;">五阶 · 实战</strong>：易混品对比 + 真伪辨<br/>
+        <span style="display:inline-block;margin-top:6px;padding-top:6px;border-top:1px dashed #d4c89c;font-size:11.5px;color:#8b5a2b;">
+        点上方"药柜"任选一味，从性状练起。
+        </span>
+      </div>
     </div>
   </aside>
 

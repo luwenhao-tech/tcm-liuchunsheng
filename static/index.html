@@ -213,7 +213,8 @@
     transition: all .15s;
     margin-left: 6px;
   }
-  #paperBtn { margin-left: auto; }
+  #newChatBtn { margin-left: auto; background: rgba(255, 217, 122, 0.3); border-color: rgba(255, 217, 122, 0.7); }
+  #newChatBtn:hover { background: rgba(255, 217, 122, 0.5); }
   .hist-btn:hover { background: rgba(255, 255, 255, 0.3); transform: none; box-shadow: none; }
 
   /* 历史记录抽屉 */
@@ -523,6 +524,7 @@
         中药鉴定学 · 刘春生教授 AI 助教
         <span class="sub">北京中医药大学 · 中药学院 · 岐黄传承</span>
       </h1>
+      <button class="hist-btn" id="newChatBtn">✨ 新对话</button>
       <button class="hist-btn" id="paperBtn">📚 论著</button>
       <button class="hist-btn" id="histBtn">📜 历史</button>
     </header>
@@ -1091,6 +1093,7 @@ async function send() {
 }
 
 $("send").onclick = send;
+$("newChatBtn").onclick = () => $("clear").click();
 $("clear").onclick = () => {
   history = [];
   currentSessionId = null;  // 开启一段新的

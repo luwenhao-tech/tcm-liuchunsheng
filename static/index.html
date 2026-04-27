@@ -515,11 +515,6 @@
   <!-- ============ 中间主区 ============ -->
   <div class="main">
     <header>
-      <svg class="ginkgo" viewBox="0 0 64 64" fill="none">
-        <path d="M32 6 C22 16, 14 24, 14 34 C14 42, 20 48, 32 48 C44 48, 50 42, 50 34 C50 24, 42 16, 32 6 Z M32 24 L30 48 M32 24 L34 48 M32 20 L26 46 M32 20 L38 46" stroke="#f2cc6b" stroke-width="1.8" stroke-linecap="round" fill="rgba(242,204,107,0.22)"/>
-        <path d="M32 48 L32 58 M28 58 L36 58" stroke="#f2cc6b" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <div class="seal">药</div>
       <h1>
         中药鉴定学 · 刘春生教授 AI 助教
         <span class="sub">北京中医药大学 · 中药学院 · 岐黄传承</span>
@@ -972,15 +967,8 @@ function addMsg(role, content) {
     // 豆包风格：用户没头像，气泡贴右
     div.innerHTML = `<div class="bubble"></div>`;
   } else {
-    // AI：金色圆形头像 + 银杏叶
-    div.innerHTML = `
-      <div class="avatar">
-        <svg viewBox="0 0 64 64" width="22" height="22" fill="none">
-          <path d="M32 6 C22 16, 14 24, 14 34 C14 42, 20 48, 32 48 C44 48, 50 42, 50 34 C50 24, 42 16, 32 6 Z M32 24 L30 48 M32 24 L34 48 M32 20 L26 46 M32 20 L38 46" stroke="#5a4410" stroke-width="2" stroke-linecap="round" fill="rgba(90,68,16,0.15)"/>
-          <path d="M32 48 L32 56 M28 56 L36 56" stroke="#5a4410" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="bubble"></div>`;
+    // AI：纯气泡，无头像
+    div.innerHTML = `<div class="bubble"></div>`;
   }
   const bubble = div.querySelector(".bubble");
   if (content) bubble.textContent = content;

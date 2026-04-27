@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>后台 · 刘春生 AI 助教</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0ebdc; color: #2a2a2a;
+  }
+  header {
+    background: linear-gradient(135deg, #3a8f7a 0%, #2a6b5c 100%);
+    color: #fff; padding: 14px 24px;
+    border-bottom: 3px solid #f2cc6b;
+    display: flex; align-items: center; gap: 14px;
+  }
+  header h1 { margin: 0; font-size: 18px; letter-spacing: 2px; flex: 1; }
+  header .logout {
+    background: rgba(255,255,255,0.2); color: #fff;
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 16px;
+    padding: 5px 14px; cursor: pointer; font-size: 13px;
+  }
+  .login-box {
+    max-width: 360px; margin: 80px auto;
+    background: #fff; border: 1.5px solid #e4dfcc; border-radius: 12px;
+    padding: 30px; text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .login-box h2 { margin: 0 0 20px; color: #3a8f7a; letter-spacing: 4px; }
+  .login-box input {
+    width: 100%; padding: 10px 14px; font-size: 14px;
+    border: 1.5px solid #d4e0d9; border-radius: 8px;
+    margin-bottom: 14px; font-family: inherit;
+  }
+  .login-box button {
+    width: 100%; padding: 10px; font-size: 14px;
+    background: #3a8f7a; color: #fff; border: none;
+    border-radius: 8px; cursor: pointer; letter-spacing: 4px;
+  }
+  .login-box button:hover { background: #2a6b5c; }
+
+  .container { max-width: 1300px; margin: 0 auto; padding: 20px; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: #fff; border: 1.5px solid #e4dfcc; border-radius: 10px;
+    padding: 16px; text-align: center;
+    box-shadow: 0 2px 8px rgba(58,143,122,0.06);
+  }
+  .stat-card .label { font-size: 12px; color: #888; letter-spacing: 2px; }
+  .stat-card .value {
+    font-size: 28px; font-weight: 700; color: #3a8f7a;
+    margin-top: 6px; letter-spacing: 1px;
+  }
+  .stat-card .sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+  .panel {
+    background: #fff; border: 1.5px solid #e4dfcc; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 16px;
+  }
+  .panel h3 {
+    margin: 0 0 12px; font-size: 14px; color: #3a8f7a;
+    letter-spacing: 2px; padding-bottom: 8px;
+    border-bottom: 1px dashed #d4e0d9;
+  }
+  .row2 {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 800px) { .row2 { grid-template-columns: 1fr; } }
+
+  .bar-chart { display: flex; gap: 6px; align-items: flex-end; height: 120px; padding: 0 6px; }
+  .bar-chart .bar {
+    flex: 1; background: linear-gradient(180deg, #4ea693 0%, #3a8f7a 100%);
+    border-radius: 4px 4px 0 0; position: relative;
+    min-height: 2px; transition: all .3s;
+  }
+  .bar-chart .bar:hover { background: linear-gradient(180deg, #f2cc6b 0%, #d4a92b 100%); }
+  .bar-chart .bar .num {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: #555;
+  }
+  .bar-chart .bar .lbl {
+    position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: #888; white-space: nowrap;
+  }
+  .bar-chart-wrap { padding-bottom: 24px; }
+
+  .kw-list, .ip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kw-tag {
+    background: #f5e6c4; border: 1px solid #c9a771;
+    color: #6b2a10; padding: 3px 10px; border-radius: 12px; font-size: 12px;
+  }
+  .kw-tag .c { color: #a83224; font-weight: 700; margin-left: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td {
+    padding: 8px 10px; text-align: left;
+    border-bottom: 1px solid #f0ebdc; vertical-align: top;
+  }
+  th { background: #f7faf8; color: #3a8f7a; font-weight: 600; letter-spacing: 1px; }
+  td.prompt { max-width: 280px; word-break: break-all; }
+  td.answer { max-width: 420px; word-break: break-all; color: #555; font-size: 12.5px; }
+  td.answer.expanded { white-space: pre-wrap; }
+  .think-tag {
+    background: #fff8e3; color: #a83224; border: 1px solid #f2cc6b;
+    padding: 1px 6px; border-radius: 8px; font-size: 11px;
+  }
+  .ts { color: #888; font-size: 11.5px; white-space: nowrap; }
+  .ip { color: #666; font-size: 11.5px; }
+  .pager { text-align: center; padding: 14px; }
+  .pager button {
+    background: #fff; border: 1.5px solid #3a8f7a; color: #3a8f7a;
+    border-radius: 16px; padding: 5px 16px; margin: 0 4px;
+    cursor: pointer; font-size: 13px;
+  }
+  .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .err { color: #a83224; text-align: center; padding: 10px; }
+</style>
+</head>
+<body>
+
+<div id="loginView">
+  <div class="login-box">
+    <h2>后台登录</h2>
+    <input type="password" id="pwd" placeholder="管理员密码" />
+    <button onclick="login()">进 入</button>
+    <div id="loginErr" class="err"></div>
+  </div>
+</div>
+
+<div id="adminView" style="display:none;">
+  <header>
+    <h1>📊 刘春生 AI 助教 · 后台</h1>
+    <button class="logout" onclick="logout()">退出</button>
+  </header>
+  <div class="container">
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="row2">
+      <div class="panel">
+        <h3>📈 最近 7 天问答量</h3>
+        <div class="bar-chart-wrap"><div class="bar-chart" id="dailyChart"></div></div>
+      </div>
+      <div class="panel">
+        <h3>🔥 热门关键词 / 药材</h3>
+        <div class="kw-list" id="hotList"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>👤 活跃 IP TOP 10</h3>
+      <div class="kw-list" id="ipList"></div>
+    </div>
+
+    <div class="panel">
+      <h3>💬 最近问答记录</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>时间</th><th>IP</th><th>模式</th>
+            <th>用户问题</th><th>AI 回答（点击展开）</th><th>耗时</th>
+          </tr></thead>
+          <tbody id="logsBody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <button id="prevBtn" onclick="prevPage()">上一页</button>
+        <span id="pageInfo" style="margin:0 10px;color:#666;"></span>
+        <button id="nextBtn" onclick="nextPage()">下一页</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const PWD_KEY = "tcm_admin_pwd";
+let pwd = sessionStorage.getItem(PWD_KEY) || "";
+let page = 0;
+const pageSize = 50;
+let total = 0;
+
+function show(view) {
+  document.getElementById("loginView").style.display = view === "login" ? "block" : "none";
+  document.getElementById("adminView").style.display = view === "admin" ? "block" : "none";
+}
+
+async function login() {
+  const v = document.getElementById("pwd").value.trim();
+  if (!v) return;
+  pwd = v;
+  const ok = await tryLoad();
+  if (ok) {
+    sessionStorage.setItem(PWD_KEY, pwd);
+    show("admin");
+  } else {
+    document.getElementById("loginErr").textContent = "密码错误";
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem(PWD_KEY);
+  pwd = "";
+  show("login");
+}
+
+async function tryLoad() {
+  try {
+    const r = await fetch("/api/admin/stats?password=" + encodeURIComponent(pwd));
+    if (r.status === 401) return false;
+    const stats = await r.json();
+    renderStats(stats);
+    await loadLogs();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function renderStats(s) {
+  document.getElementById("statsGrid").innerHTML = `
+    <div class="stat-card"><div class="label">累计问答</div><div class="value">${s.total}</div></div>
+    <div class="stat-card"><div class="label">今日问答</div><div class="value">${s.today_count}</div></div>
+    <div class="stat-card"><div class="label">累计独立访客</div><div class="value">${s.unique_ips}</div><div class="sub">按 IP 计</div></div>
+    <div class="stat-card"><div class="label">今日访客</div><div class="value">${s.today_ips}</div></div>
+    <div class="stat-card"><div class="label">深度思考使用</div><div class="value">${s.think_count}</div><div class="sub">占比 ${s.think_rate}%</div></div>
+  `;
+
+  const max = Math.max(...s.daily.map(d => d.count), 1);
+  document.getElementById("dailyChart").innerHTML = s.daily.map(d => `
+    <div class="bar" style="height:${(d.count / max) * 100}%">
+      <span class="num">${d.count}</span>
+      <span class="lbl">${d.date}</span>
+    </div>`).join("");
+
+  document.getElementById("hotList").innerHTML = s.hot_keywords.length
+    ? s.hot_keywords.map(k => `<span class="kw-tag">${k.keyword}<span class="c">${k.count}</span></span>`).join("")
+    : '<span style="color:#aaa;font-size:12px;">暂无数据</span>';
+
+  document.getElementById("ipList").innerHTML = s.top_ips.length
+    ? s.top_ips.map(i => `<span class="kw-tag">${i.ip || "未知"}<span class="c">${i.count}</span></span>`).join("")
+    : '<span style="color:#aaa;font-size:12px;">暂无数据</span>';
+}
+
+async function loadLogs() {
+  const r = await fetch(`/api/admin/logs?password=${encodeURIComponent(pwd)}&limit=${pageSize}&offset=${page * pageSize}`);
+  if (r.status === 401) { logout(); return; }
+  const j = await r.json();
+  total = j.total;
+  document.getElementById("logsBody").innerHTML = j.logs.map(l => `
+    <tr>
+      <td class="ts">${l.ts.replace("T", " ")}</td>
+      <td class="ip">${l.ip || ""}</td>
+      <td>${l.think ? '<span class="think-tag">🧠 思考</span>' : ''}</td>
+      <td class="prompt">${escapeHtml(l.prompt || "")}</td>
+      <td class="answer" onclick="this.classList.toggle('expanded')">${escapeHtml((l.answer || "").slice(0, 200))}${(l.answer || "").length > 200 ? "..." : ""}</td>
+      <td class="ts">${l.duration_ms ? (l.duration_ms / 1000).toFixed(1) + "s" : ""}</td>
+    </tr>
+  `).join("");
+  const maxPage = Math.ceil(total / pageSize);
+  document.getElementById("pageInfo").textContent = `第 ${page + 1} / ${maxPage || 1} 页（共 ${total} 条）`;
+  document.getElementById("prevBtn").disabled = page === 0;
+  document.getElementById("nextBtn").disabled = page + 1 >= maxPage;
+}
+
+function prevPage() { if (page > 0) { page--; loadLogs(); } }
+function nextPage() { page++; loadLogs(); }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+document.getElementById("pwd").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+
+// 自动登录
+if (pwd) {
+  tryLoad().then(ok => {
+    if (ok) show("admin"); else show("login");
+  });
+} else {
+  show("login");
+}
+</script>
+
+</body>
+</html>

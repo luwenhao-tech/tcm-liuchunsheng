@@ -75,11 +75,12 @@ class ChatRequest(BaseModel):
     temperature: float = 0.6
     stream: bool = True
     think: bool = False
+    image: Optional[str] = None  # base64 data URL: "data:image/jpeg;base64,..."
 
 
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest, request: Request):
-    if not req.prompt.strip():
+    if not req.prompt.strip() and not req.image:
         raise HTTPException(400, "问题不能为空")
 
     history_dicts: List[Dict[str, str]] = (
@@ -91,12 +92,16 @@ async def api_chat(req: ChatRequest, request: Request):
     user_agent = request.headers.get("user-agent", "")
     started = time.time()
 
+    # 日志里的 prompt 标记是否带图
+    prompt_for_log = req.prompt + ("  [📷 含图片]" if req.image else "")
+
     if not req.stream:
         text = await generate(
             req.prompt, history=history_dicts,
             temperature=req.temperature, think=req.think,
+            image_data=req.image,
         )
-        log_chat(client_ip, user_agent, req.prompt, text, req.think, int((time.time() - started) * 1000))
+        log_chat(client_ip, user_agent, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
         return {"content": text}
 
     async def event_stream():
@@ -105,6 +110,7 @@ async def api_chat(req: ChatRequest, request: Request):
             async for token in generate_stream(
                 req.prompt, history=history_dicts,
                 temperature=req.temperature, think=req.think,
+                image_data=req.image,
             ):
                 full_answer += token
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
@@ -113,7 +119,7 @@ async def api_chat(req: ChatRequest, request: Request):
             err = json.dumps({"error": str(e)}, ensure_ascii=False)
             yield f"data: {err}\n\n"
         finally:
-            log_chat(client_ip, user_agent, req.prompt, full_answer, req.think, int((time.time() - started) * 1000))
+            log_chat(client_ip, user_agent, prompt_for_log, full_answer, req.think, int((time.time() - started) * 1000))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 

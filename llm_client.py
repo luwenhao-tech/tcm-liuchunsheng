@@ -13,10 +13,18 @@ BASE_URL = os.getenv("LLM_BASE_URL", "https://api.deepseek.com/v1")
 MODEL = os.getenv("LLM_MODEL", "deepseek-chat")
 REASONING_MODEL = os.getenv("LLM_REASONING_MODEL", "deepseek-reasoner")
 
+# 多模态视觉模型（通义千问 qwen-vl-max）
+VISION_API_KEY = os.getenv("VISION_API_KEY", "")
+VISION_BASE_URL = os.getenv("VISION_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+VISION_MODEL = os.getenv("VISION_MODEL", "qwen-vl-max")
+
 if not API_KEY:
     raise RuntimeError("请在 .env 中设置 LLM_API_KEY")
 
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
+
+# 视觉模型 client（如果配置了 VISION_API_KEY 才创建）
+vision_client = AsyncOpenAI(api_key=VISION_API_KEY, base_url=VISION_BASE_URL) if VISION_API_KEY else None
 
 
 # ============ 刘春生教授人设 system prompt ============
@@ -75,18 +83,42 @@ async def generate_stream(
     history: Optional[List[Dict[str, str]]] = None,
     temperature: float = 0.6,
     think: bool = False,
+    image_data: Optional[str] = None,
 ) -> AsyncGenerator[str, None]:
-    """流式生成内容，yield 每个增量 token。think=True 时切换到推理模型。"""
+    """流式生成内容，yield 每个增量 token。
+    - think=True 切换到推理模型
+    - image_data 不为空时切换到视觉模型（base64 data URL 或 http URL）
+    """
     messages = [{"role": "system", "content": system_prompt or LIU_CHUNSHENG_SYSTEM_PROMPT}]
     if history:
         messages.extend(history)
-    messages.append({"role": "user", "content": user_prompt})
 
-    model = REASONING_MODEL if think else MODEL
-    kwargs = {"model": model, "messages": messages, "stream": True}
-    if not think:
-        kwargs["temperature"] = temperature
-    stream = await client.chat.completions.create(**kwargs)
+    # 有图片：用视觉模型 + multimodal content
+    if image_data:
+        if not vision_client:
+            yield "（视觉功能未启用：请在服务器 .env 中配置 VISION_API_KEY）"
+            return
+        messages.append({
+            "role": "user",
+            "content": [
+                {"type": "text", "text": user_prompt or "请帮我鉴别这张图片里的中药材。"},
+                {"type": "image_url", "image_url": {"url": image_data}},
+            ],
+        })
+        stream = await vision_client.chat.completions.create(
+            model=VISION_MODEL,
+            messages=messages,
+            temperature=temperature,
+            stream=True,
+        )
+    else:
+        messages.append({"role": "user", "content": user_prompt})
+        model = REASONING_MODEL if think else MODEL
+        kwargs = {"model": model, "messages": messages, "stream": True}
+        if not think:
+            kwargs["temperature"] = temperature
+        stream = await client.chat.completions.create(**kwargs)
+
     async for chunk in stream:
         if chunk.choices and chunk.choices[0].delta.content:
             yield chunk.choices[0].delta.content
@@ -98,15 +130,33 @@ async def generate(
     history: Optional[List[Dict[str, str]]] = None,
     temperature: float = 0.6,
     think: bool = False,
+    image_data: Optional[str] = None,
 ) -> str:
-    """一次性返回完整内容（非流式）。think=True 时切换到推理模型。"""
+    """一次性返回完整内容（非流式）。"""
     messages = [{"role": "system", "content": system_prompt or LIU_CHUNSHENG_SYSTEM_PROMPT}]
     if history:
         messages.extend(history)
-    messages.append({"role": "user", "content": user_prompt})
-    model = REASONING_MODEL if think else MODEL
-    kwargs = {"model": model, "messages": messages}
-    if not think:
-        kwargs["temperature"] = temperature
-    resp = await client.chat.completions.create(**kwargs)
+
+    if image_data:
+        if not vision_client:
+            return "（视觉功能未启用：请在服务器 .env 中配置 VISION_API_KEY）"
+        messages.append({
+            "role": "user",
+            "content": [
+                {"type": "text", "text": user_prompt or "请帮我鉴别这张图片里的中药材。"},
+                {"type": "image_url", "image_url": {"url": image_data}},
+            ],
+        })
+        resp = await vision_client.chat.completions.create(
+            model=VISION_MODEL,
+            messages=messages,
+            temperature=temperature,
+        )
+    else:
+        messages.append({"role": "user", "content": user_prompt})
+        model = REASONING_MODEL if think else MODEL
+        kwargs = {"model": model, "messages": messages}
+        if not think:
+            kwargs["temperature"] = temperature
+        resp = await client.chat.completions.create(**kwargs)
     return resp.choices[0].message.content or ""

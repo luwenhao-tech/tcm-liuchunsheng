@@ -562,10 +562,19 @@
     </div>
 
     <div class="inputbar">
-      <textarea id="prompt" placeholder="您说话，Enter 发送，Shift+Enter 换行"></textarea>
+      <textarea id="prompt" placeholder="您说话，Enter 发送，Shift+Enter 换行；点 📷 传图鉴别"></textarea>
+      <input type="file" id="imgInput" accept="image/*" style="display:none;" />
+      <button id="imgBtn" type="button" title="上传药材图片，AI 帮您鉴别" style="background:#fff;color:#a83224;border:1.5px solid #a83224;border-radius:20px;padding:0 12px;font-size:15px;font-family:inherit;cursor:pointer;height:42px;flex-shrink:0;white-space:nowrap;">📷</button>
       <button id="thinkToggle" type="button" title="开启后用推理模型，回答更深入但稍慢" style="background:#fff;color:#3a8f7a;border:1.5px solid #3a8f7a;border-radius:20px;padding:0 12px;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:1px;height:42px;flex-shrink:0;white-space:nowrap;">🧠 深度思考</button>
       <button id="send">发送</button>
       <button id="clear" class="clear">清空</button>
+    </div>
+    <div id="imgPreview" style="display:none;padding:6px 10px 0;max-width:900px;margin:0 auto;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:#fff8e3;border:1.5px solid #f2cc6b;border-radius:8px;padding:6px 10px;">
+        <img id="imgThumb" style="width:48px;height:48px;object-fit:cover;border-radius:4px;" />
+        <span id="imgName" style="font-size:12px;color:#6b4a24;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <button id="imgRemove" style="background:none;border:none;color:#a83224;font-size:16px;cursor:pointer;padding:0 4px;">✕</button>
+      </div>
     </div>
     <div class="hint">支持多轮追问：先问"何首乌的来源"，接着问"它的性状特征呢"，咱接着聊。</div>
   </div>
@@ -676,6 +685,59 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");
+/* ============ 图片上传 ============ */
+let pendingImage = null; // base64 data URL
+const imgInput = $("imgInput");
+const imgBtn = $("imgBtn");
+const imgPreview = $("imgPreview");
+const imgThumb = $("imgThumb");
+const imgName = $("imgName");
+const imgRemove = $("imgRemove");
+
+imgBtn?.addEventListener("click", () => imgInput.click());
+imgInput?.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) {
+    alert("图片不能超过 8MB");
+    imgInput.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    pendingImage = ev.target.result;
+    imgThumb.src = pendingImage;
+    imgName.textContent = file.name;
+    imgPreview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
+imgRemove?.addEventListener("click", () => {
+  pendingImage = null;
+  imgInput.value = "";
+  imgPreview.style.display = "none";
+});
+
+/* 拖拽 / 粘贴图片 */
+const promptEl = $("prompt");
+promptEl?.addEventListener("paste", (e) => {
+  for (const item of e.clipboardData.items) {
+    if (item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        pendingImage = ev.target.result;
+        imgThumb.src = pendingImage;
+        imgName.textContent = "粘贴的图片";
+        imgPreview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+      e.preventDefault();
+      break;
+    }
+  }
+});
+
 let history = [];
 
 /* ============ 深度思考开关 ============ */
@@ -798,23 +860,52 @@ function addMsg(role, content) {
   div.innerHTML = `
     <div class="avatar">${role === "user" ? "生" : "师"}</div>
     <div class="bubble"></div>`;
-  div.querySelector(".bubble").textContent = content;
+  const bubble = div.querySelector(".bubble");
+  if (content) bubble.textContent = content;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
-  return div.querySelector(".bubble");
+  return bubble;
 }
 
 async function send() {
   const prompt = $("prompt").value.trim();
-  if (!prompt) return;
+  const image = pendingImage;
+  if (!prompt && !image) return;
   $("prompt").value = "";
-  addMsg("user", prompt);
+
+  // 用户气泡：先显示图片（如有）再显示文字
+  const userBubble = addMsg("user", "");
+  if (image) {
+    const img = document.createElement("img");
+    img.src = image;
+    img.style.cssText = "max-width:200px;max-height:200px;border-radius:8px;display:block;margin-bottom:6px;";
+    userBubble.appendChild(img);
+  }
+  if (prompt) {
+    const txt = document.createElement("div");
+    txt.textContent = prompt;
+    userBubble.appendChild(txt);
+  } else if (image) {
+    const txt = document.createElement("div");
+    txt.style.color = "#888"; txt.style.fontSize = "12px";
+    txt.textContent = "（请鉴别此图）";
+    userBubble.appendChild(txt);
+  }
+
+  // 清空图片预览
+  pendingImage = null;
+  imgInput.value = "";
+  imgPreview.style.display = "none";
 
   const bubble = addMsg("assistant", "");
   $("send").disabled = true;
 
   /* 京味儿"思考中"提示 */
-  const thinkingPhrases = thinkMode ? [
+  const thinkingPhrases = image ? [
+    "嘿，您先候着，老师正端详这张图呢……",
+    "稍等，让我瞅瞅这是哪味药……",
+    "您甭急，这就给您细看……"
+  ] : (thinkMode ? [
     "嘿，您先候着，老师正琢磨这事儿呢……",
     "稍等稍等，咱得把这味药掰扯清楚了再说……",
     "您甭急，这道题得多想想，错不了……",
@@ -825,7 +916,7 @@ async function send() {
     "得嘞，马上来……",
     "您稍候，正给您写呢……",
     "甭急甭急，这就好……"
-  ];
+  ]);
   const phrase = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
   bubble.innerHTML = `<span class="thinking-tip" style="color:#8b6f3a;letter-spacing:1px;">${phrase}<span class="dots"></span></span>`;
   let firstToken = true;
@@ -834,7 +925,7 @@ async function send() {
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ prompt, history, stream: true, think: thinkMode }),
+      body: JSON.stringify({ prompt, history, stream: true, think: thinkMode, image }),
     });
 
     const reader = resp.body.getReader();

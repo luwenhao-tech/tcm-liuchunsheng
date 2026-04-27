@@ -448,11 +448,32 @@
 
   em, i, cite, dfn, address, var { font-style: normal; }
 
-  /* 窄屏时隐藏侧栏 */
+  /* 窄屏：单列布局 + 侧栏可滚动展开 */
   @media (max-width: 768px) {
-    .layout { grid-template-columns: 1fr; }
-    .side { display: none; }
+    .layout {
+      grid-template-columns: 1fr;
+      height: auto; min-height: 100vh;
+      padding: 10px;
+    }
     body { overflow: auto; }
+    .side {
+      height: auto;
+      overflow: visible;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .side .panel {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 140px;
+      padding: 6px 8px;
+    }
+    .side .panel h3 { font-size: 11.5px; }
+    .drawers { grid-template-columns: 1fr 1fr; }
+    .main { min-height: 70vh; }
+    h1 { font-size: 16px !important; }
+    .sub { display: none !important; }
+    .hist-btn { padding: 4px 8px !important; font-size: 11px !important; }
   }
 #loginMask { display: flex; }
 #loginMask.hidden { display: none !important; }
@@ -551,7 +572,7 @@
 
     <div class="chat" id="chat">
       <div class="welcome" id="welcome">
-        <div class="big">嘿，同学来啦？</div>
+        <div class="big" id="welcomeBig">嘿，同学来啦？</div>
         我是刘春生教授的 AI 助教。<br/>
         今儿想聊哪味药，哪个知识点？您说话。
         <div class="quick" id="quickBox"></div>
@@ -681,6 +702,8 @@ const chat = $("chat");
   const showChip = (name) => {
     $("userName").textContent = "👤 " + name;
     chip.style.display = "inline-flex";
+    const big = document.getElementById("welcomeBig");
+    if (big) big.textContent = `${name} 同学来啦？`;
   };
   if (saved) {
     mask.classList.add("hidden");
@@ -1096,7 +1119,11 @@ async function send() {
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ prompt, history, stream: true, think: thinkMode, image }),
+      body: JSON.stringify({
+        prompt, history, stream: true, think: thinkMode, image,
+        user_name: localStorage.getItem("tcm_user_name") || "",
+        user_id: localStorage.getItem("tcm_user_id") || "",
+      }),
     });
 
     const reader = resp.body.getReader();
@@ -1146,8 +1173,10 @@ $("newChatBtn").onclick = () => $("clear").click();
 $("clear").onclick = () => {
   history = [];
   currentSessionId = null;  // 开启一段新的
+  const uname = localStorage.getItem("tcm_user_name") || "";
+  const greet = uname ? `${uname} 同学，咱重开个话头儿` : "嘿，咱重开个话头儿";
   chat.innerHTML = `<div class="welcome" id="welcome">
-    <div class="big">嘿，咱重开个话头儿</div>
+    <div class="big">${greet}</div>
     今儿想聊哪味药？换几道试试：
     <div class="quick" id="quickBox"></div>
   </div>`;

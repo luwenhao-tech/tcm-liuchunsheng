@@ -27,7 +27,9 @@ app.add_middleware(
 
 # ============ 日志数据库 ============
 DB_PATH = Path(__file__).parent / "chat_logs.db"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+if not ADMIN_PASSWORD:
+    print("[WARN] 未设置 ADMIN_PASSWORD 环境变量，/admin 接口将禁用以防弱口令暴露")
 
 
 def init_db():
@@ -38,12 +40,20 @@ def init_db():
             ts TEXT NOT NULL,
             ip TEXT,
             ua TEXT,
+            user_name TEXT,
+            user_id TEXT,
             prompt TEXT,
             answer TEXT,
             think INTEGER DEFAULT 0,
             duration_ms INTEGER
         )
     """)
+    # 给历史库补字段（已存在则忽略错误）
+    for col in ("user_name TEXT", "user_id TEXT"):
+        try:
+            conn.execute(f"ALTER TABLE chat_log ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
     conn.commit()
     conn.close()
 
@@ -51,12 +61,12 @@ def init_db():
 init_db()
 
 
-def log_chat(ip: str, ua: str, prompt: str, answer: str, think: bool, duration_ms: int):
+def log_chat(ip: str, ua: str, user_name: str, user_id: str, prompt: str, answer: str, think: bool, duration_ms: int):
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
-            "INSERT INTO chat_log (ts, ip, ua, prompt, answer, think, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (datetime.now().isoformat(timespec="seconds"), ip, ua, prompt, answer, 1 if think else 0, duration_ms),
+            "INSERT INTO chat_log (ts, ip, ua, user_name, user_id, prompt, answer, think, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (datetime.now().isoformat(timespec="seconds"), ip, ua, user_name, user_id, prompt, answer, 1 if think else 0, duration_ms),
         )
         conn.commit()
         conn.close()
@@ -76,6 +86,8 @@ class ChatRequest(BaseModel):
     stream: bool = True
     think: bool = False
     image: Optional[str] = None  # base64 data URL: "data:image/jpeg;base64,..."
+    user_name: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 @app.post("/api/chat")
@@ -90,6 +102,8 @@ async def api_chat(req: ChatRequest, request: Request):
     client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "")
     client_ip = client_ip.split(",")[0].strip()
     user_agent = request.headers.get("user-agent", "")
+    user_name = (req.user_name or "").strip()[:32]
+    user_id = (req.user_id or "").strip()[:32]
     started = time.time()
 
     # 日志里的 prompt 标记是否带图
@@ -101,7 +115,7 @@ async def api_chat(req: ChatRequest, request: Request):
             temperature=req.temperature, think=req.think,
             image_data=req.image,
         )
-        log_chat(client_ip, user_agent, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
+        log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
         return {"content": text}
 
     async def event_stream():
@@ -119,13 +133,16 @@ async def api_chat(req: ChatRequest, request: Request):
             err = json.dumps({"error": str(e)}, ensure_ascii=False)
             yield f"data: {err}\n\n"
         finally:
-            log_chat(client_ip, user_agent, prompt_for_log, full_answer, req.think, int((time.time() - started) * 1000))
+            log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, full_answer, req.think, int((time.time() - started) * 1000))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 # ============ 管理后台 ============
 def check_admin(password: Optional[str]) -> bool:
+    # 未设置环境变量则一律拒绝，防止默认 admin123 被滥用
+    if not ADMIN_PASSWORD:
+        return False
     return password == ADMIN_PASSWORD
 
 

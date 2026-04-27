@@ -295,6 +295,74 @@ async def admin_stats(password: str = ""):
     }
 
 
+# ============ 账号管理 API（管理员）============
+def save_accounts(accounts: Dict[str, str]):
+    """写回 accounts.json，保留下划线开头字段。"""
+    existing = {}
+    if ACCOUNTS_PATH.exists():
+        try:
+            with open(ACCOUNTS_PATH, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+                if isinstance(raw, dict):
+                    existing = {k: v for k, v in raw.items() if k.startswith("_")}
+        except Exception:
+            pass
+    merged = {**existing, **accounts}
+    with open(ACCOUNTS_PATH, "w", encoding="utf-8") as f:
+        json.dump(merged, f, ensure_ascii=False, indent=2)
+
+
+class AccountAddReq(BaseModel):
+    password: str
+    account: str
+    user_password: str
+
+
+class AccountDelReq(BaseModel):
+    password: str
+    account: str
+
+
+@app.get("/api/admin/accounts")
+async def admin_accounts_list(password: str = ""):
+    if not check_admin(password):
+        raise HTTPException(401, "密码错误")
+    accs = load_accounts()
+    return {"accounts": [{"account": k, "password": v} for k, v in accs.items()]}
+
+
+@app.post("/api/admin/accounts/add")
+async def admin_accounts_add(req: AccountAddReq):
+    if not check_admin(req.password):
+        raise HTTPException(401, "密码错误")
+    acc = req.account.strip()
+    if not acc or acc.startswith("_"):
+        raise HTTPException(400, "账号不合法（不能为空，不能以下划线开头）")
+    if len(acc) > 32:
+        raise HTTPException(400, "账号过长（最多 32 字符）")
+    if not req.user_password:
+        raise HTTPException(400, "密码不能为空")
+    accs = load_accounts()
+    accs[acc] = req.user_password
+    save_accounts(accs)
+    return {"ok": True}
+
+
+@app.post("/api/admin/accounts/delete")
+async def admin_accounts_delete(req: AccountDelReq):
+    if not check_admin(req.password):
+        raise HTTPException(401, "密码错误")
+    accs = load_accounts()
+    if req.account in accs:
+        accs.pop(req.account)
+        save_accounts(accs)
+        # 立即使该账号当前所有 token 失效
+        for tk in list(TOKENS.keys()):
+            if TOKENS[tk]["account"] == req.account:
+                TOKENS.pop(tk, None)
+    return {"ok": True}
+
+
 # 静态资源
 static_dir = Path(__file__).parent / "static"
 if static_dir.exists():

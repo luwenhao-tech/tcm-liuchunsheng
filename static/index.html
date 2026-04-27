@@ -504,38 +504,13 @@
     <!-- 药柜 -->
     <div class="panel">
       <h3><span class="dot"></span>药柜·常考药材</h3>
-      <div class="drawers">
-        <div class="drawer" data-q="黄连的性状鉴别">黄 连</div>
-        <div class="drawer" data-q="大黄怎么鉴别真伪？">大 黄</div>
-        <div class="drawer" data-q="甘草的显微鉴别特征">甘 草</div>
-        <div class="drawer" data-q="当归的性状特征">当 归</div>
-        <div class="drawer" data-q="何首乌的鉴别要点">何首乌</div>
-        <div class="drawer" data-q="三七的鉴别要点">三 七</div>
-        <div class="drawer" data-q="人参的性状鉴别要点">人 参</div>
-        <div class="drawer" data-q="天麻的性状鉴别">天 麻</div>
-        <div class="drawer" data-q="川芎的性状鉴别">川 芎</div>
-        <div class="drawer" data-q="白芍的性状鉴别">白 芍</div>
-        <div class="drawer" data-q="黄芪的性状鉴别">黄 芪</div>
-        <div class="drawer" data-q="防风的性状鉴别">防 风</div>
-      </div>
+      <div class="drawers" id="drawerBox"></div>
     </div>
 
     <!-- 今日考点 -->
     <div class="panel">
       <h3><span class="dot"></span>今日考点</h3>
-      <div class="quote" style="line-height:1.75;font-size:12.5px;">
-        人参芦头「珍珠疙瘩」——身份证；<br/>
-        黄连「过桥」——节间光滑；<br/>
-        大黄断面「星点」——异型维管束；<br/>
-        三七「铜皮铁骨」——外黄内青；<br/>
-        何首乌「云锦花纹」——异型维管束；<br/>
-        天麻「鹦哥嘴、凹肚脐」——两头定真伪；<br/>
-        当归「马尾归」——主根粗、支根细；<br/>
-        川芎「蝴蝶片」——切片纹理如翅；<br/>
-        白芍「糟皮粉碴」——皮糙心粉；<br/>
-        甘草「菊花心」——断面射线放射；<br/>
-        黄芪「金井玉栏」——皮白心黄。
-      </div>
+      <div class="quote" id="dailyExamBox" style="line-height:1.75;font-size:12.5px;"></div>
     </div>
   </aside>
 
@@ -622,17 +597,7 @@
     <!-- 鉴别口诀 -->
     <div class="panel">
       <h3><span class="dot"></span>口诀·鉴别</h3>
-      <div class="quote" style="font-size:12.5px;line-height:1.9;">
-        <strong style="color:#a83224;">怀山药</strong>：色白粉足<br/>
-        <strong style="color:#a83224;">川贝母</strong>：怀中抱月<br/>
-        <strong style="color:#a83224;">天麻</strong>：鹦哥嘴，凹肚脐<br/>
-        <strong style="color:#a83224;">防风</strong>：蚯蚓头，菊花心<br/>
-        <strong style="color:#a83224;">党参</strong>：狮子盘头<br/>
-        <strong style="color:#a83224;">何首乌</strong>：云锦花纹<br/>
-        <strong style="color:#a83224;">三七</strong>：铜皮铁骨狮子头<br/>
-        <strong style="color:#a83224;">大黄</strong>：锦纹星点<br/>
-        <strong style="color:#a83224;">黄连</strong>：过桥连珠
-      </div>
+      <div class="quote" id="rhymeBox" style="font-size:12.5px;line-height:1.9;"></div>
     </div>
 
     <!-- 关键词 -->
@@ -694,6 +659,109 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");
+
+/* ============ 侧栏内容轮换（每 10 分钟一组）============ */
+const DRAWER_GROUPS = [
+  // 第 1 组：常考根茎类
+  [["黄 连","黄连的性状鉴别"],["大 黄","大黄怎么鉴别真伪？"],["甘 草","甘草的显微鉴别特征"],
+   ["当 归","当归的性状特征"],["何首乌","何首乌的鉴别要点"],["三 七","三七的鉴别要点"],
+   ["人 参","人参的性状鉴别要点"],["天 麻","天麻的性状鉴别"],["川 芎","川芎的性状鉴别"],
+   ["白 芍","白芍的性状鉴别"],["黄 芪","黄芪的性状鉴别"],["防 风","防风的性状鉴别"]],
+  // 第 2 组：花类、果实种子类
+  [["红 花","红花的鉴别要点"],["金银花","金银花的性状鉴别"],["菊 花","菊花有几种来源？"],
+   ["槐 米","槐米的性状鉴别"],["五味子","五味子的鉴别要点"],["枸杞子","枸杞子怎么辨真伪？"],
+   ["山茱萸","山茱萸的性状特征"],["女贞子","女贞子的鉴别"],["决明子","决明子的性状鉴别"],
+   ["薏苡仁","薏苡仁的鉴别要点"],["白果","白果的鉴别"],["车前子","车前子的鉴别要点"]],
+  // 第 3 组：动物药、矿物药、皮叶类
+  [["鹿 茸","鹿茸的鉴别要点"],["麝 香","麝香怎么鉴别？"],["牛 黄","牛黄的真伪鉴别"],
+   ["珍 珠","珍珠的鉴别要点"],["蝉 蜕","蝉蜕的鉴别"],["蜈 蚣","蜈蚣的鉴别要点"],
+   ["朱 砂","朱砂的鉴别"],["雄 黄","雄黄的鉴别要点"],["杜 仲","杜仲的性状鉴别"],
+   ["肉 桂","肉桂的鉴别要点"],["大青叶","大青叶的鉴别"],["艾 叶","艾叶的鉴别要点"]],
+];
+
+const EXAM_GROUPS = [
+  // 第 1 组：经典 11 味
+  `人参芦头「珍珠疙瘩」——身份证；<br/>
+   黄连「过桥」——节间光滑；<br/>
+   大黄断面「星点」——异型维管束；<br/>
+   三七「铜皮铁骨」——外黄内青；<br/>
+   何首乌「云锦花纹」——异型维管束；<br/>
+   天麻「鹦哥嘴、凹肚脐」——两头定真伪；<br/>
+   当归「马尾归」——主根粗、支根细；<br/>
+   川芎「蝴蝶片」——切片纹理如翅；<br/>
+   白芍「糟皮粉碴」——皮糙心粉；<br/>
+   甘草「菊花心」——断面射线放射；<br/>
+   黄芪「金井玉栏」——皮白心黄。`,
+  // 第 2 组：花果种子要点
+  `金银花「青翘黄花」——蕾色定品质；<br/>
+   红花「短管深红」——伪品多桃红；<br/>
+   菊花「亳贡滁怀」——四大产区；<br/>
+   山茱萸「红肉去核」——去核留皮；<br/>
+   五味子「皮肉甜酸、核辛苦咸」——五味俱全；<br/>
+   枸杞「水浸不沉」——色红肉厚；<br/>
+   决明子「双子斜方」——外硬内黄；<br/>
+   女贞子「卵形紫黑」——表面皱缩；<br/>
+   槐米「未开花蕾」——黄绿带柄。`,
+  // 第 3 组：动矿皮叶
+  `鹿茸「血片蜡片粉片」——三层定优劣；<br/>
+   麝香「当门子」——颗粒香气浓；<br/>
+   牛黄「乌金衣、挂甲」——指甲黄染；<br/>
+   珍珠「层纹同心圆」——断面见纹；<br/>
+   朱砂「鲜红如血」——硫化汞结晶；<br/>
+   雄黄「鸡冠红」——遇火气重；<br/>
+   杜仲「拉丝不断」——胶丝是真品；<br/>
+   肉桂「油润紫红」——内色深外色浅；<br/>
+   艾叶「绒白叶绿」——揉之成绒。`,
+];
+
+const RHYME_GROUPS = [
+  // 第 1 组：经典口诀
+  [["怀山药","色白粉足"],["川贝母","怀中抱月"],["天麻","鹦哥嘴，凹肚脐"],
+   ["防风","蚯蚓头，菊花心"],["党参","狮子盘头"],["何首乌","云锦花纹"],
+   ["三七","铜皮铁骨狮子头"],["大黄","锦纹星点"],["黄连","过桥连珠"]],
+  // 第 2 组：进阶口诀
+  [["人参","芦碗珍珠疙瘩须"],["白术","云头鹤颈如意头"],["茅苍术","起霜赤褐有朱砂"],
+   ["羌活","蚕羌竹节心环纹"],["黄芩","枯芩朽朽子芩实"],["桔梗","金井玉栏银皮黄心"],
+   ["山药","色白粉足细而长"],["延胡索","金黄断面花纹"],["浙贝母","元宝贝大贝先"]],
+  // 第 3 组：易混淆品鉴别
+  [["川贝 vs 浙贝","怀中抱月vs元宝双瓣"],["北沙参 vs 南沙参","北白细vs南粗松"],
+   ["党参 vs 人参","盘头狮vs珍珠疙瘩"],["黄柏 vs 关黄柏","川黄柏厚vs关黄柏薄"],
+   ["白芍 vs 赤芍","糟皮粉碴vs外棕断面粉"],["茅苍术 vs 北苍术","朱砂点vs无朱砂"],
+   ["金银花 vs 山银花","青翘嫩vs褐红老"],["生地 vs 熟地","黑润vs乌黑泛光"],
+   ["天麻 vs 紫茉莉","鹦哥嘴vs无嘴"]],
+];
+
+function renderSidebars() {
+  // 用当前 10 分钟时段做种子，保证同一时段所有用户看到同一组
+  const slot = Math.floor(Date.now() / (10 * 60 * 1000));
+  const idx = slot % 3;
+
+  const drawerBox = $("drawerBox");
+  if (drawerBox) {
+    drawerBox.innerHTML = DRAWER_GROUPS[idx].map(
+      ([name, q]) => `<div class="drawer" data-q="${q}">${name}</div>`
+    ).join("");
+  }
+
+  const examBox = $("dailyExamBox");
+  if (examBox) examBox.innerHTML = EXAM_GROUPS[idx];
+
+  const rhymeBox = $("rhymeBox");
+  if (rhymeBox) {
+    rhymeBox.innerHTML = RHYME_GROUPS[idx].map(
+      ([name, txt]) => `<strong style="color:#a83224;">${name}</strong>：${txt}<br/>`
+    ).join("");
+  }
+  // 注意：药柜点击交给全局 [data-q] 事件委托处理，无需重复绑定
+}
+
+// 首屏渲染 + 每 10 分钟轮换
+document.addEventListener("DOMContentLoaded", () => {
+  renderSidebars();
+  setInterval(renderSidebars, 10 * 60 * 1000);
+});
+
+let history = [];
 /* ============ 图片上传 ============ */
 let pendingImage = null; // base64 data URL
 const imgInput = $("imgInput");
@@ -746,8 +814,6 @@ promptEl?.addEventListener("paste", (e) => {
     }
   }
 });
-
-let history = [];
 
 /* ============ 深度思考开关 ============ */
 let thinkMode = false;

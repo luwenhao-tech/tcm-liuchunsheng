@@ -1116,7 +1116,15 @@ function addMsg(role, content) {
     div.innerHTML = `<div class="bubble"></div>`;
   }
   const bubble = div.querySelector(".bubble");
-  if (content) bubble.textContent = content;
+  if (content) {
+    if (role === "assistant") {
+      bubble.innerHTML = escapeHtml(content)
+        .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/「([^」\n]+)」/g, '<strong>$1</strong>');
+    } else {
+      bubble.textContent = content;
+    }
+  }
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return bubble;

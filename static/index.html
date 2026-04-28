@@ -395,6 +395,22 @@
   }
   .msg.assistant:hover .copy-btn { opacity: 1; }
   .msg.assistant .copy-btn:hover { background: #fff; color: var(--bucm-green); }
+  /* 快捷追问 */
+  .followups { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 4px; }
+  .followup {
+    display: inline-block;
+    padding: 5px 12px;
+    background: #fff8e3;
+    border: 1px solid #d4c8a0;
+    border-radius: 14px;
+    font-size: 12.5px;
+    color: #6d4c1b;
+    cursor: pointer;
+    letter-spacing: .3px;
+    transition: all .15s;
+  }
+  .followup:hover { background: #f5e6c4; border-color: #a83224; color: #a83224; }
+  .followup::before { content: "↪ "; color: #a89a6a; }
 
   /* 思考中提示 */
   .thinking-tip { display: inline-flex; align-items: center; }
@@ -501,7 +517,46 @@
     h1 { font-size: 16px !important; }
     .sub { display: none !important; }
     .hist-btn { padding: 4px 8px !important; font-size: 11px !important; }
+    /* 移动端：聊天气泡占满；输入框加底部安全距 */
+    .bubble { max-width: 92% !important; font-size: 14px !important; }
+    .inputbar { padding-bottom: max(12px, env(safe-area-inset-bottom)) !important; }
+    textarea { font-size: 16px !important; } /* iOS 不再缩放 */
+    .followup { font-size: 12px !important; padding: 4px 10px !important; }
   }
+  @media (max-width: 480px) {
+    .side .panel { flex: 1 1 100%; }
+    .drawers { grid-template-columns: 1fr 1fr 1fr !important; }
+  }
+  /* 暗色模式（手动切换：html.dark） */
+  html.dark { background: #1a1d1c; }
+  html.dark body { background: #1a1d1c; color: #d8d2c2; }
+  html.dark .main { background: #20232a; }
+  html.dark .side .panel { background: #262a2e; border-color: #3a3f45; color: #d8d2c2; }
+  html.dark .side .panel h3 { color: #ffd97a; }
+  html.dark .bubble { color: #e6e0d0; }
+  html.dark .msg.user .bubble { background: #2d6a59; color: #fff; }
+  html.dark .msg.assistant .bubble { background: transparent; color: #e6e0d0; }
+  html.dark textarea { background: #262a2e; color: #e6e0d0; border-color: #3a3f45; }
+  html.dark .inputbar { background: #20232a; border-color: #3a3f45; }
+  html.dark .followup { background: #2a2e35; color: #ffd97a; border-color: #3a3f45; }
+  html.dark .bubble strong { color: #ff9d8d; }
+  html.dark .bubble .kw-title { color: #ffd97a; }
+  html.dark .welcome { color: #c8c2b0; }
+  html.dark .drawer { color: #fff; }
+  html.dark .hist-drawer { background: #20232a; }
+  html.dark .copy-btn { background: rgba(0,0,0,.3) !important; color: #d8d2c2 !important; border-color: #3a3f45 !important; }
+  /* 主题切换按钮 */
+  .theme-toggle {
+    position: fixed; top: 14px; right: 14px; z-index: 9999;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,.85); border: 1px solid #d4c8a0;
+    cursor: pointer; font-size: 16px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.1);
+    transition: transform .2s;
+  }
+  .theme-toggle:hover { transform: rotate(20deg); }
+  html.dark .theme-toggle { background: #2a2e35; color: #ffd97a; border-color: #3a3f45; }
 #loginMask { display: flex; transition: opacity .35s; }
 #loginMask.hidden { opacity: 0; pointer-events: none; display: flex !important; }
 #loginMask.gone { display: none !important; }
@@ -532,6 +587,7 @@
 </style>
 </head>
 <body>
+<button id="themeToggle" class="theme-toggle" title="切换日间/夜间模式">🌙</button>
 
 <!-- ============ 登录页 ============ -->
 <div id="loginMask" style="position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,#3a8f7a 0%,#4ea693 50%,#2d6b5c 100%);display:flex;align-items:center;justify-content:center;">
@@ -619,6 +675,7 @@
         <div class="big" id="welcomeBig">嘿，同学来啦？</div>
         我是刘春生教授的 AI 助教。<br/>
         今儿想聊哪味药，哪个知识点？您说话。
+        <div id="dailyQuote" style="margin-top:18px;padding-top:14px;border-top:1px dashed #d4c8a0;font-size:12.5px;color:#8a6f3a;letter-spacing:1px;line-height:1.9;font-style:italic;"></div>
       </div>
     </div>
 
@@ -807,6 +864,23 @@
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");
 
+/* ============ 主题：日间/夜间，状态存 localStorage ============ */
+(function initTheme() {
+  const saved = localStorage.getItem("tcm_theme");
+  if (saved === "dark") document.documentElement.classList.add("dark");
+})();
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = $("themeToggle");
+  if (!btn) return;
+  const sync = () => btn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+  sync();
+  btn.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem("tcm_theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+    sync();
+  });
+});
+
 /* ============ 自动清理：旧版用户的 localStorage 残留 ============ */
 /* 老用户曾经只填姓名就进了，他们 localStorage 里有 tcm_user_name 但没 tcm_token，
    清掉这些遗留，让他们看到新的登录页。 */
@@ -899,7 +973,7 @@ fetch("/api/features").then(r => r.json()).then(d => {
   }
 }).catch(() => {});
 
-/* ============ 侧栏内容轮换（每 10 分钟一组）============ */
+/* ============ 侧栏内容轮换（每天一组，按本地日期切，循环 7 组）============ */
 const DRAWER_GROUPS = [
   // 第 1 组：常考根茎类
   [["黄 连","黄连的性状鉴别"],["大 黄","大黄怎么鉴别真伪？"],["甘 草","甘草的显微鉴别特征"],
@@ -922,6 +996,30 @@ const DRAWER_GROUPS = [
    ["肉 桂","肉桂的鉴别要点"],["大青叶","大青叶的鉴别"],["艾 叶","艾叶的鉴别要点"],
    ["厚 朴","厚朴的鉴别要点"],["桑白皮","桑白皮的鉴别"],["石 膏","石膏的鉴别"],
    ["龙 骨","龙骨的鉴别要点"],["地 龙","地龙的鉴别"]],
+  // 第 4 组：易混品对照
+  [["川贝 vs 浙贝","川贝母和浙贝母怎么分？"],["党参 vs 人参","党参和人参怎么区分？"],
+   ["金银花 vs 山银花","金银花和山银花有什么区别？"],["生地 vs 熟地","生地和熟地怎么辨？"],
+   ["茅苍术 vs 北苍术","茅苍术和北苍术的区别"],["北沙参 vs 南沙参","北沙参和南沙参怎么分？"],
+   ["白芍 vs 赤芍","白芍和赤芍的区别"],["黄柏 vs 关黄柏","川黄柏和关黄柏怎么分？"],
+   ["大青叶 vs 板蓝根","大青叶和板蓝根的区别"],["天麻 vs 紫茉莉","天麻和紫茉莉根的区别"],
+   ["柴胡 vs 大叶柴胡","北柴胡和大叶柴胡区别"],["黄芪 vs 红芪","黄芪和红芪怎么分？"]],
+  // 第 5 组：道地药材
+  [["怀地黄","四大怀药是什么？"],["怀山药","怀山药的道地性"],["浙贝母","浙八味是什么？"],
+   ["川 芎","川产道地药材有哪些？"],["云茯苓","云南道地药材"],["东阿胶","阿胶的道地性"],
+   ["建泽泻","闽产道地药材"],["藏红花","藏红花的来源"],["关防风","关药代表"],
+   ["杭白菊","菊花四大产区"],["亳白芍","亳州道地药材"],["祁艾","蕲艾 vs 祁艾"]],
+  // 第 6 组：经验术语 / 显微特征
+  [["菊花心","什么是菊花心？举例"],["朱砂点","哪些药材有朱砂点？"],["起 霜","讲讲起霜"],
+   ["鹦哥嘴","鹦哥嘴是哪味药？"],["过 桥","过桥是什么？"],["怀中抱月","什么叫怀中抱月？"],
+   ["云锦花纹","什么是云锦花纹？"],["金井玉栏","什么是金井玉栏？"],["蚯蚓头","蚯蚓头指什么？"],
+   ["珍珠疙瘩","珍珠疙瘩是什么？"],["铜皮铁骨","铜皮铁骨指什么药材？"],["狮子盘头","狮子盘头举例"],
+   ["车轮纹","什么是车轮纹？"],["星 点","星点见于哪味药？"]],
+  // 第 7 组：考研高频
+  [["四 大","四大怀药是什么？"],["浙八味","浙八味包含哪些？"],["四大菊","菊花四大产区"],
+   ["四大南","四大南药是什么？"],["四大藏","四大藏药"],["鉴定四要","鉴定四要是什么？"],
+   ["显 微","显微鉴别和性状鉴别的区别"],["水 试","什么是水试？哪些药材常用？"],
+   ["火 试","什么是火试？举例"],["取 样","中药鉴定的取样原则"],["药典","《中国药典》2020 年版结构"],
+   ["伪 品","常见伪品有哪些？"]],
 ];
 
 const EXAM_GROUPS = [
@@ -951,6 +1049,39 @@ const EXAM_GROUPS = [
    杜仲「拉丝不断」——胶丝是真；<br/>
    肉桂「油润紫红」——内深外浅；<br/>
    艾叶「绒白叶绿」——揉之成绒。`,
+  // 第 4 组：易混品鉴别口诀
+  `川贝「怀中抱月」vs 浙贝「元宝双瓣」；<br/>
+   党参「狮子盘头」vs 人参「珍珠疙瘩」；<br/>
+   金银花「青翘」vs 山银花「褐红」；<br/>
+   生地「黑润」vs 熟地「乌黑泛光」；<br/>
+   北沙参「白细」vs 南沙参「粗松」；<br/>
+   茅苍术「朱砂点」vs 北苍术「无朱砂」；<br/>
+   白芍「糟皮粉碴」vs 赤芍「外棕断面粉」。`,
+  // 第 5 组：道地药材
+  `四大怀药——怀地、怀牛、怀山、怀菊；<br/>
+   浙八味——白术、白芍、贝母、玄参、麦冬、菊花、延胡索、温郁金；<br/>
+   四大南药——槟榔、益智、砂仁、巴戟天；<br/>
+   川芎「青城山」——川产道地；<br/>
+   东阿胶「乌驴皮」——山东东阿；<br/>
+   亳白芍「白芷之首」——安徽亳州；<br/>
+   蕲艾「绒白叶厚」——湖北蕲春。`,
+  // 第 6 组：经验术语速记
+  `菊花心——切面放射状，柚子瓤；<br/>
+   朱砂点——红棕色油点，撒辣椒面；<br/>
+   起霜——析出白色结晶；<br/>
+   过桥——节间光杆儿；<br/>
+   怀中抱月——大瓣抱小瓣；<br/>
+   云锦花纹——皮部异型维管束；<br/>
+   金井玉栏——黄心白皮；<br/>
+   珍珠疙瘩——人参须上小疙瘩。`,
+  // 第 7 组：高频考点
+  `鉴定四要——形、色、气、味；<br/>
+   水试——西红花、苏木、秦皮、蟾酥；<br/>
+   火试——麝香、海金沙、青黛；<br/>
+   取样原则——5 件以下逐件取；<br/>
+   显微——粉末特征；性状——经验眼力；<br/>
+   药典依据——《中国药典》2020 年版一部；<br/>
+   伪品识别——形似神不似，必查显微。`,
 ];
 
 const RHYME_GROUPS = [
@@ -968,36 +1099,84 @@ const RHYME_GROUPS = [
    ["白芍 vs 赤芍","糟皮粉碴vs外棕断面粉"],["茅苍术 vs 北苍术","朱砂点vs无朱砂"],
    ["金银花 vs 山银花","青翘嫩vs褐红老"],["生地 vs 熟地","黑润vs乌黑泛光"],
    ["天麻 vs 紫茉莉","鹦哥嘴vs无嘴"]],
+  // 第 4 组：动物矿物药
+  [["鹿茸","血蜡粉片三层分"],["麝香","当门子粒粒香"],["牛黄","乌金衣挂甲黄"],
+   ["珍珠","层纹同心断面见"],["朱砂","鲜红如血硫化汞"],["雄黄","橙红块状鸡冠石"],
+   ["蛤蚧","头大尾长珠粒鳞"],["地龙","环节腹色定真伪"],["蜈蚣","背绿腹黄足红"]],
+  // 第 5 组：花果种子
+  [["金银花","青翘黄花蕾未开"],["红花","短管深红色不褪"],["菊花","亳贡滁怀四产区"],
+   ["五味子","皮甜核辛五味全"],["山茱萸","红肉去核晒成皱"],["枸杞子","水浸不沉色红润"],
+   ["决明子","双子斜方外硬黄"],["车前子","黑棕扁圆遇水黏"],["吴茱萸","闭果三裂味辛苦"]],
+  // 第 6 组：皮叶类与树脂
+  [["杜仲","拉丝不断胶丝真"],["肉桂","油润紫红香气浓"],["黄柏","内黄外灰皮厚松"],
+   ["厚朴","油润紫棕辛辣麻"],["大青叶","蓝绿叶面卷边见"],["艾叶","绒白叶绿揉成绒"],
+   ["桑白皮","内白外黄丝纤维"],["乳香","半透明粒香气浓"],["没药","深红块状有油渍"]],
+  // 第 7 组：考研高频对比
+  [["四大怀药","地黄牛膝山药菊"],["浙八味","术芍贝玄麦菊延郁"],["四大南药","槟益砂巴"],
+   ["四大藏","红景天藏红花冬虫雪莲"],["鉴定四要","形色气味"],
+   ["水试三药","红花苏木秦皮"],["火试三药","麝香海金沙青黛"],
+   ["道地药","怀浙关川云广"],["药典依据","2020版一部"]],
 ];
 
+/* ============ 每日金句（按日期切，循环若干句）============ */
+const DAILY_QUOTES = [
+  ["神农尝百草，一日而遇七十毒。", "《淮南子·修务训》"],
+  ["药有阴阳配合，子母兄弟，根茎花实，草石骨肉。", "《神农本草经》"],
+  ["夫医道所兴，其来久矣。", "《本草纲目·序》"],
+  ["凡欲诊病者，必问饮食居处。", "《素问·疏五过论》"],
+  ["药不瞑眩，厥疾弗瘳。", "《尚书·说命》"],
+  ["大医精诚，博极医源。", "孙思邈《千金要方》"],
+  ["读医书三年，便谓天下无病可医；治病三年，方知天下无方可用。", "张仲景"],
+  ["望而知之谓之神，闻而知之谓之圣，问而知之谓之工，切而知之谓之巧。", "《难经·六十一难》"],
+  ["凡药三分毒。", "《周礼·天官》"],
+  ["药者，治病之器，非养生之具。", "李时珍"],
+  ["上药养命，中药养性，下药治病。", "《神农本草经》"],
+  ["医者，意也。在人思虑。", "孙思邈"],
+];
+
+function dayIndex() {
+  // 用本地时区的"自然日"做下标，每天 0 点切换
+  const now = new Date();
+  const epoch = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor(epoch / 86400000);
+}
+
 function renderSidebars() {
-  // 用当前 10 分钟时段做种子，保证同一时段所有用户看到同一组
-  const slot = Math.floor(Date.now() / (10 * 60 * 1000));
-  const idx = slot % 3;
+  const day = dayIndex();
+  const drawerIdx = day % DRAWER_GROUPS.length;
+  const examIdx   = day % EXAM_GROUPS.length;
+  const rhymeIdx  = day % RHYME_GROUPS.length;
 
   const drawerBox = $("drawerBox");
   if (drawerBox) {
-    drawerBox.innerHTML = DRAWER_GROUPS[idx].map(
+    drawerBox.innerHTML = DRAWER_GROUPS[drawerIdx].map(
       ([name, q]) => `<div class="drawer" data-q="${q}">${name}</div>`
     ).join("");
   }
 
   const examBox = $("dailyExamBox");
-  if (examBox) examBox.innerHTML = EXAM_GROUPS[idx];
+  if (examBox) examBox.innerHTML = EXAM_GROUPS[examIdx];
 
   const rhymeBox = $("rhymeBox");
   if (rhymeBox) {
-    rhymeBox.innerHTML = RHYME_GROUPS[idx].map(
+    rhymeBox.innerHTML = RHYME_GROUPS[rhymeIdx].map(
       ([name, txt]) => `<strong style="color:#a83224;">${name}</strong>：${txt}<br/>`
     ).join("");
+  }
+
+  // 每日金句注入欢迎页
+  const quoteBox = $("dailyQuote");
+  if (quoteBox) {
+    const [text, author] = DAILY_QUOTES[day % DAILY_QUOTES.length];
+    quoteBox.innerHTML = `『${text}』<br/><span style="opacity:.6;font-size:11px;">— ${author}</span>`;
   }
   // 注意：药柜点击交给全局 [data-q] 事件委托处理，无需重复绑定
 }
 
-// 首屏渲染 + 每 10 分钟轮换
+// 首屏渲染 + 每小时检查一次（跨日自动换内容）
 document.addEventListener("DOMContentLoaded", () => {
   renderSidebars();
-  setInterval(renderSidebars, 10 * 60 * 1000);
+  setInterval(renderSidebars, 60 * 60 * 1000);
 });
 
 let history = [];
@@ -1158,6 +1337,39 @@ function renderRich(s) {
     .replace(/「([^」\n]+)」/g, '<strong>$1</strong>')
     .replace(/【([^】\n]+)】/g, '<span class="kw-title">【$1】</span>')
     .replace(/《([^》\n]+)》/g, '<span class="kw-book">《$1》</span>');
+}
+
+// 根据上一轮问答智能挑追问
+function pickFollowups(userPrompt, answer) {
+  const p = (userPrompt || "") + (answer || "");
+  // 提取可能的药名（简易：取问题里第一个 2-4 字中文词）
+  const m = (userPrompt || "").match(/[\u4e00-\u9fa5]{2,4}/);
+  const drug = m ? m[0] : "";
+  const list = [];
+  // 鉴别类
+  if (/鉴别|性状|真伪|怎么辨|看图|这是什么/.test(p)) {
+    if (drug) list.push(`${drug}的常见伪品有哪些？`, `${drug}的显微鉴别特征`, `${drug}的道地产区在哪儿？`);
+  }
+  // 易混品类
+  else if (/区别|区分|怎么分|vs|对比/.test(p)) {
+    list.push("还有哪些类似的易混品？", "考研常考这俩怎么出题？");
+  }
+  // 概念/术语类
+  else if (/什么是|是什么|什么叫|含义|定义/.test(p)) {
+    list.push("举几个对应的药材例子", "考点常出现在哪类题里？");
+  }
+  // 考点类
+  else if (/考点|考研|重点|考试|笔记/.test(p)) {
+    if (drug) list.push(`${drug}的鉴别要点`, `${drug}的伪品有哪些？`, "再来一组高频考点");
+  }
+  // 默认兜底
+  if (list.length === 0 && drug) {
+    list.push(`${drug}的鉴别要点`, `${drug}的伪品有哪些？`, `${drug}的道地产区`);
+  }
+  if (list.length === 0) {
+    list.push("再举两个例子", "这部分常见考点是什么？");
+  }
+  return list.slice(0, 3);
 }
 function loadSession(id) {
   const sessions = loadSessions();
@@ -1331,6 +1543,17 @@ async function send() {
         });
       };
       bubble.parentElement.appendChild(copyBtn);
+
+      // 注入快捷追问（基于上一轮 prompt 智能挑 2-3 条）
+      const followups = pickFollowups(prompt, full);
+      if (followups.length) {
+        const fuBox = document.createElement("div");
+        fuBox.className = "followups";
+        fuBox.innerHTML = followups.map(q =>
+          `<span class="followup" data-q="${q.replace(/"/g, '&quot;')}">${q}</span>`
+        ).join("");
+        bubble.parentElement.appendChild(fuBox);
+      }
     }
     history.push({ role: "user", content: prompt });
     history.push({ role: "assistant", content: full });

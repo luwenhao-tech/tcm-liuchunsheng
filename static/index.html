@@ -1386,7 +1386,7 @@ function renderRich(s) {
     .replace(/《([^》\n]+)》/g, '<span class="kw-book">《$1》</span>');
 }
 
-// 根据上一轮问答智能挑追问
+// 根据上一轮问答智能挑追问（结合用户问题 + 模型回答）
 function pickFollowups(userPrompt, answer) {
   const p = (userPrompt || "").trim();
   const a = (answer || "").trim();
@@ -1395,30 +1395,87 @@ function pickFollowups(userPrompt, answer) {
   // 寒暄 / 闲聊 / 自我认知类问题：不出追问
   const SMALLTALK = /^(你好|您好|嗨|hi|hello|在吗|在不在|你是谁|你叫什么|你干嘛|你能干嘛|你能做什么|介绍.{0,4}自己|测试|test|谢谢|thanks)/i;
   if (SMALLTALK.test(p)) return [];
-  if (p.length <= 4 && !/[药味方草]/.test(p)) return [];
+  if (p.length <= 4 && !/[药味方草]/.test(p) && a.length < 20) return [];
 
-  // 已知中药名/术语白名单（命中才允许生成"xx 的鉴别要点"这种模板）
-  const HERB_RE = /(人参|黄连|大黄|甘草|当归|何首乌|三七|天麻|川芎|白芍|赤芍|黄芪|防风|党参|川贝母?|浙贝母?|贝母|金银花|山银花|菊花|红花|槐米|五味子|枸杞子?|山茱萸|女贞子|决明子|薏苡仁|白果|车前子|砂仁|豆蔻|吴茱萸|山楂|木瓜|莲子|鹿茸|麝香|牛黄|珍珠|蝉蜕|蜈蚣|朱砂|雄黄|杜仲|肉桂|大青叶|艾叶|厚朴|桑白皮|石膏|龙骨|地龙|生地黄?|熟地黄?|山药|怀山药|延胡索|白术|苍术|茅苍术|北苍术|羌活|黄芩|桔梗|柴胡|黄柏|关黄柏|川黄柏|北沙参|南沙参|板蓝根|紫茉莉)/;
-  const m = p.match(HERB_RE);
-  const drug = m ? m[0] : "";
+  // 中药名白名单（用于命中提取）
+  const HERB_RE = /(人参|黄连|大黄|甘草|当归|何首乌|三七|天麻|川芎|白芍|赤芍|黄芪|防风|党参|川贝母?|浙贝母?|贝母|金银花|山银花|菊花|红花|槐米|五味子|枸杞子?|山茱萸|女贞子|决明子|薏苡仁|白果|车前子|砂仁|豆蔻|吴茱萸|山楂|木瓜|莲子|鹿茸|麝香|牛黄|珍珠|蝉蜕|蜈蚣|朱砂|雄黄|杜仲|肉桂|大青叶|艾叶|厚朴|桑白皮|石膏|龙骨|地龙|生地黄?|熟地黄?|山药|怀山药|延胡索|白术|苍术|茅苍术|北苍术|羌活|黄芩|桔梗|柴胡|黄柏|关黄柏|川黄柏|北沙参|南沙参|板蓝根|紫茉莉|麦冬|玄参|温郁金|益智|巴戟天|槟榔)/g;
+  // 经验术语白名单
+  const TERM_RE = /(菊花心|朱砂点|起霜|过桥|怀中抱月|云锦花纹|金井玉栏|蚯蚓头|珍珠疙瘩|铜皮铁骨|狮子盘头|车轮纹|星点|当门子|挂甲|鹦哥嘴|马尾归|乌金衣|元宝双瓣)/g;
+
+  const text = p + " \n " + a;
+  const drugs = Array.from(new Set((text.match(HERB_RE) || [])));
+  const terms = Array.from(new Set((text.match(TERM_RE) || [])));
+  // 用户问题里出现的优先
+  const drugInP = (p.match(HERB_RE) || [])[0] || "";
+  const drugInA = drugs.find(d => d !== drugInP) || "";
 
   const list = [];
-  // 类型识别
+  const seen = new Set();
+  const add = (q) => {
+    if (!q) return;
+    if (seen.has(q)) return;
+    if (q.length > 22) return;
+    seen.add(q); list.push(q);
+  };
+
+  // 1) 类型化追问（按用户问题语境）
   if (/区别|区分|怎么分|vs|对比/.test(p)) {
-    list.push("还有哪些类似的易混品？", "这俩临床用法有何不同？");
+    add("还有哪些类似的易混品？");
+    add("这俩临床用法有何不同？");
+    if (drugInP) add(`${drugInP}的道地产区在哪？`);
   } else if (/什么是|是什么|什么叫|含义|定义/.test(p)) {
-    list.push("举几个对应的药材例子", "这部分有什么记忆要点？");
-  } else if (drug && /鉴别|性状|真伪|怎么辨|看图|这是什么|要点|特征/.test(p)) {
-    list.push(`${drug}的常见伪品`, `${drug}的显微鉴别`, `${drug}的道地产区`);
-  } else if (drug && /考点|考研|重点|考试|笔记|要点|记忆/.test(p)) {
-    list.push(`${drug}的鉴别要点`, `${drug}的伪品`, "再来一组重点");
-  } else if (drug) {
-    // 直接问药名，比如"人参"
-    list.push(`${drug}的鉴别要点`, `${drug}的伪品`, `${drug}的道地产区`);
-  } else {
-    // 没识别到药名 / 类型 → 不出追问，免得乱拼
-    return [];
+    add("举几个对应的药材例子");
+    add("这个特征怎么记最不容易忘？");
+    if (terms[0]) add(`${terms[0]}最典型的药材是哪个？`);
+  } else if (drugInP && /鉴别|性状|真伪|怎么辨|看图|这是什么|要点|特征/.test(p)) {
+    add(`${drugInP}的常见伪品有哪些？`);
+    add(`${drugInP}的显微鉴别要点`);
+    add(`${drugInP}的道地产区在哪？`);
+  } else if (drugInP && /功效|主治|临床|配伍|用法|剂量/.test(p)) {
+    add(`${drugInP}常配伍哪些药？`);
+    add(`${drugInP}有什么使用禁忌？`);
+    add(`${drugInP}和它的近似药怎么区分？`);
+  } else if (drugInP && /炮制|制法|加工/.test(p)) {
+    add(`${drugInP}不同炮制品功效有何差异？`);
+    add(`${drugInP}的炮制要点是什么？`);
+    add(`${drugInP}的鉴别要点`);
+  } else if (drugInP) {
+    add(`${drugInP}的鉴别要点`);
+    add(`${drugInP}的常见伪品`);
+    add(`${drugInP}的道地产区在哪？`);
   }
+
+  // 2) 从模型回答里挖：第二味药 → 顺势引出对比题
+  if (list.length < 3 && drugInP && drugInA) {
+    add(`${drugInP}和${drugInA}怎么区分？`);
+  }
+  // 3) 回答里出现的经验术语 → 追问
+  if (list.length < 3) {
+    for (const t of terms) {
+      if (list.length >= 3) break;
+      add(`${t}是什么意思？`);
+    }
+  }
+  // 4) 回答里第二/第三味药 → 单独追问
+  if (list.length < 3) {
+    for (const d of drugs) {
+      if (list.length >= 3) break;
+      if (d === drugInP) continue;
+      add(`${d}的鉴别要点`);
+    }
+  }
+  // 5) 兜底：依据回答篇幅给出通用追问
+  if (list.length < 3) {
+    if (/伪品|掺伪|假货|混淆/.test(a)) add("常见伪品该怎么一眼识破？");
+    if (/显微|粉末|结晶|导管|纤维/.test(a)) add("显微特征怎么和性状对应？");
+    if (/产地|道地|主产/.test(a)) add("不同产地的品质差异大吗？");
+    if (/炮制|生用|制用|酒炙|蜜炙|盐炙/.test(a)) add("炮制后功效有什么变化？");
+    if (/性味|归经|功效|主治/.test(a)) add("临床上常配哪些药一起用？");
+    if (drugInP) add(`再讲讲${drugInP}的口诀好记吗？`);
+    add("能再举一个相似的例子吗？");
+    add("这个知识点教学上怎么讲学生最爱听？");
+  }
+
   return list.slice(0, 3);
 }
 function loadSession(id) {

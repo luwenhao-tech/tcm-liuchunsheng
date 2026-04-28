@@ -390,9 +390,10 @@
   /* 消息下方操作行（豆包风格：图标式小按钮，左对齐用户/AI 视各自方向）*/
   .msg-actions {
     display: flex; gap: 4px; margin-top: 2px;
-    opacity: 0; transition: opacity .15s;
+    opacity: 0; height: 0; overflow: hidden;
+    transition: opacity .15s;
   }
-  .msg:hover .msg-actions { opacity: 1; }
+  .msg:hover .msg-actions { opacity: 1; height: auto; overflow: visible; }
   .msg.user .msg-actions { justify-content: flex-end; }
   .msg.assistant .msg-actions { justify-content: flex-start; padding-left: 0; }
   .msg-actions button {
@@ -422,7 +423,7 @@
   html.dark .msg-actions button:hover { background: rgba(255,255,255,.08); color: #ffd97a; }
 
   /* 快捷追问：放在 AI 消息下方，紧贴操作行 */
-  .followups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; padding-left: 0; }
+  .followups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; padding-left: 0; }
   .followup {
     display: inline-block;
     padding: 5px 12px;
@@ -1583,8 +1584,7 @@ function attachAssistantActions(bubble, getText, followups) {
       setTimeout(() => { b.textContent = old; b.classList.remove("copied"); }, 1200);
     });
   };
-  wrap.appendChild(row);
-  // 追问
+  // 追问（紧贴气泡下方，仿豆包样式）
   if (followups && followups.length) {
     const fuBox = document.createElement("div");
     fuBox.className = "followups";
@@ -1593,6 +1593,8 @@ function attachAssistantActions(bubble, getText, followups) {
     ).join("");
     wrap.appendChild(fuBox);
   }
+  // 操作行放最下面（hover 才显示，不占额外间距）
+  wrap.appendChild(row);
 }
 
 async function send() {

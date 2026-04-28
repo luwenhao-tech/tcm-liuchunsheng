@@ -393,7 +393,12 @@
     opacity: 0; height: 0; overflow: hidden;
     transition: opacity .15s;
   }
-  .msg:hover .msg-actions { opacity: 1; height: auto; overflow: visible; }
+  /* 桌面端：仅在支持 hover 的设备上保留悬停展开 */
+  @media (hover: hover) and (pointer: fine) {
+    .msg:hover .msg-actions { opacity: 1; height: auto; overflow: visible; }
+  }
+  /* 移动端 / 通用：点击气泡后才展开（豆包风格） */
+  .msg.show-actions .msg-actions { opacity: 1; height: auto; overflow: visible; }
   .msg.user .msg-actions { justify-content: flex-end; }
   .msg.assistant .msg-actions { justify-content: flex-start; padding-left: 0; }
   .msg-actions button {
@@ -1530,6 +1535,14 @@ function openHist() {
 }
 
 /* ============ 聊天 ============ */
+// 点击空白处收起所有"复制/编辑"操作行（仅注册一次）
+if (!window.__msgActionsBound) {
+  window.__msgActionsBound = true;
+  document.addEventListener("click", (ev) => {
+    if (ev.target.closest(".msg")) return;
+    document.querySelectorAll(".msg.show-actions").forEach(m => m.classList.remove("show-actions"));
+  });
+}
 function addMsg(role, content) {
   const welcome = $("welcome");
   if (welcome) welcome.remove();
@@ -1538,6 +1551,14 @@ function addMsg(role, content) {
   // 用 wrap 包 bubble，方便把"操作行"挂气泡下方
   div.innerHTML = `<div class="bubble-wrap"><div class="bubble"></div></div>`;
   const bubble = div.querySelector(".bubble");
+  // 点击气泡切换操作行（豆包风格：点一下出现 复制/编辑，点别处收起）
+  bubble.addEventListener("click", (ev) => {
+    // 点击的是操作行内按钮 / 追问 / 链接，不切换
+    if (ev.target.closest(".msg-actions") || ev.target.closest(".followups") || ev.target.tagName === "A") return;
+    document.querySelectorAll(".msg.show-actions").forEach(m => { if (m !== div) m.classList.remove("show-actions"); });
+    div.classList.toggle("show-actions");
+    ev.stopPropagation();
+  });
   if (content) {
     if (role === "assistant") {
       bubble.innerHTML = renderRich(content);

@@ -1388,6 +1388,34 @@ function renderRich(s) {
 }
 
 // 根据上一轮问答智能挑追问（结合用户问题 + 模型回答）
+function _normChipQ(q) {
+  return (q || "").replace(/[\s。．\.,，、!！?？:：;；~～\-—_…"'《》()（）\[\]【】↪💬]/g, "").toLowerCase();
+}
+function collectAskedChipsAndFollowups() {
+  // 把当前会话已出现过的：模型 💬 反问 + 之前推过的所有追问 chip 都收起来
+  const used = new Set();
+  try {
+    for (const m of (history || [])) {
+      if (m.role === "assistant") {
+        const lines = (m.content || "").split("\n");
+        for (const ln of lines) {
+          const s = ln.trim();
+          if (!s) continue;
+          if (s.startsWith("💬") || /[？?]\s*$/.test(s)) {
+            used.add(_normChipQ(s));
+          }
+        }
+      } else if (m.role === "user") {
+        used.add(_normChipQ(m.content));
+      }
+    }
+  } catch (e) {}
+  // 当前页面上所有已渲染的 chip（包括上一条消息底下还挂着的）
+  document.querySelectorAll(".followup").forEach(el => {
+    used.add(_normChipQ(el.textContent || ""));
+  });
+  return used;
+}
 function pickFollowups(userPrompt, answer) {
   const p = (userPrompt || "").trim();
   const a = (answer || "").trim();
@@ -1412,10 +1440,12 @@ function pickFollowups(userPrompt, answer) {
 
   const list = [];
   const seen = new Set();
+  const usedAll = collectAskedChipsAndFollowups();
   const add = (q) => {
     if (!q) return;
     if (seen.has(q)) return;
     if (q.length > 22) return;
+    if (usedAll.has(_normChipQ(q))) return; // 整段会话用过的全部跳过
     seen.add(q); list.push(q);
   };
 

@@ -348,6 +348,9 @@
   .chat::-webkit-scrollbar-thumb { background: #c8d6cf; border-radius: 4px; }
 
   .msg { margin-bottom: 18px; display: flex; gap: 10px; position: relative; z-index: 1; }
+  .bubble-wrap { display: flex; flex-direction: column; max-width: 100%; min-width: 0; }
+  .msg.user .bubble-wrap { align-items: flex-end; }
+  .msg.assistant .bubble-wrap { align-items: flex-start; flex: 1; }
   .msg .avatar {
     width: 38px; height: 38px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -382,21 +385,42 @@
   .bubble .kw-title { color: #6d4c1b; font-weight: 700; letter-spacing: 1px; }
   .bubble .kw-book { color: #2f6b48; font-style: normal; }
   .msg.assistant { position: relative; }
-  .msg.assistant .copy-btn {
-    position: absolute; right: 8px; bottom: 4px;
-    background: rgba(255,255,255,.7);
-    border: 1px solid #d4e0d9;
-    color: #5a8b7a;
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 11px;
-    cursor: pointer;
+  /* 消息下方操作行（豆包风格：图标式小按钮，左对齐用户/AI 视各自方向）*/
+  .msg-actions {
+    display: flex; gap: 4px; margin-top: 6px;
     opacity: 0; transition: opacity .15s;
   }
-  .msg.assistant:hover .copy-btn { opacity: 1; }
-  .msg.assistant .copy-btn:hover { background: #fff; color: var(--bucm-green); }
-  /* 快捷追问 */
-  .followups { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 4px; }
+  .msg:hover .msg-actions { opacity: 1; }
+  .msg.user .msg-actions { justify-content: flex-end; }
+  .msg.assistant .msg-actions { justify-content: flex-start; padding-left: 4px; }
+  .msg-actions button {
+    background: transparent;
+    border: none;
+    color: #8a8378;
+    font-size: 12px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: background .12s, color .12s;
+    box-shadow: none;
+    transform: none;
+  }
+  .msg-actions button:hover {
+    background: rgba(0,0,0,.05);
+    color: var(--bucm-green);
+    transform: none;
+    box-shadow: none;
+  }
+  .msg-actions button.copied { color: var(--bucm-green); }
+  html.dark .msg-actions button { color: #8a8378; }
+  html.dark .msg-actions button:hover { background: rgba(255,255,255,.08); color: #ffd97a; }
+
+  /* 快捷追问：放在 AI 消息下方，独立一行 */
+  .followups { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-left: 4px; }
   .followup {
     display: inline-block;
     padding: 5px 12px;
@@ -1397,13 +1421,8 @@ function addMsg(role, content) {
   if (welcome) welcome.remove();
   const div = document.createElement("div");
   div.className = "msg " + role;
-  if (role === "user") {
-    // 豆包风格：用户没头像，气泡贴右
-    div.innerHTML = `<div class="bubble"></div>`;
-  } else {
-    // AI：纯气泡，无头像
-    div.innerHTML = `<div class="bubble"></div>`;
-  }
+  // 用 wrap 包 bubble，方便把"操作行"挂气泡下方
+  div.innerHTML = `<div class="bubble-wrap"><div class="bubble"></div></div>`;
   const bubble = div.querySelector(".bubble");
   if (content) {
     if (role === "assistant") {
@@ -1411,10 +1430,86 @@ function addMsg(role, content) {
     } else {
       bubble.textContent = content;
     }
+    // 历史回放时也注入操作按钮
+    if (role === "user") {
+      attachUserActions(bubble, content);
+    } else {
+      attachAssistantActions(bubble, content);
+    }
   }
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return bubble;
+}
+
+/* ============ 消息操作按钮（豆包风格：气泡下方一行图标）============ */
+function attachUserActions(bubble, getText) {
+  const wrap = bubble.parentElement;
+  if (!wrap || wrap.querySelector(".msg-actions")) return;
+  const text = typeof getText === "function" ? getText : () => getText || bubble.textContent || "";
+  const row = document.createElement("div");
+  row.className = "msg-actions";
+  row.innerHTML = `
+    <button data-act="edit" title="编辑">✏️ 编辑</button>
+    <button data-act="copy" title="复制">📋 复制</button>
+  `;
+  row.querySelector('[data-act="copy"]').onclick = (ev) => {
+    ev.stopPropagation();
+    const t = text();
+    navigator.clipboard?.writeText(t).then(() => {
+      const b = ev.currentTarget;
+      const old = b.textContent;
+      b.textContent = "✓ 已复制";
+      b.classList.add("copied");
+      setTimeout(() => { b.textContent = old; b.classList.remove("copied"); }, 1200);
+    });
+  };
+  row.querySelector('[data-act="edit"]').onclick = (ev) => {
+    ev.stopPropagation();
+    const t = text();
+    const promptEl = $("prompt");
+    if (promptEl) {
+      promptEl.value = t;
+      promptEl.focus();
+      promptEl.setSelectionRange(t.length, t.length);
+      // 自动撑高
+      promptEl.style.height = "auto";
+      promptEl.style.height = Math.min(promptEl.scrollHeight, 200) + "px";
+    }
+  };
+  wrap.appendChild(row);
+}
+
+function attachAssistantActions(bubble, getText, followups) {
+  const wrap = bubble.parentElement;
+  if (!wrap) return;
+  // 先清掉旧的（流式过程会多次调用）
+  wrap.querySelectorAll(".msg-actions, .followups").forEach(n => n.remove());
+  const text = typeof getText === "function" ? getText : () => getText || bubble.textContent || "";
+  const row = document.createElement("div");
+  row.className = "msg-actions";
+  row.innerHTML = `<button data-act="copy" title="复制">📋 复制</button>`;
+  row.querySelector('[data-act="copy"]').onclick = (ev) => {
+    ev.stopPropagation();
+    const t = text();
+    navigator.clipboard?.writeText(t).then(() => {
+      const b = ev.currentTarget;
+      const old = b.textContent;
+      b.textContent = "✓ 已复制";
+      b.classList.add("copied");
+      setTimeout(() => { b.textContent = old; b.classList.remove("copied"); }, 1200);
+    });
+  };
+  wrap.appendChild(row);
+  // 追问
+  if (followups && followups.length) {
+    const fuBox = document.createElement("div");
+    fuBox.className = "followups";
+    fuBox.innerHTML = followups.map(q =>
+      `<span class="followup" data-q="${q.replace(/"/g, '&quot;')}">${q}</span>`
+    ).join("");
+    wrap.appendChild(fuBox);
+  }
 }
 
 async function send() {
@@ -1441,6 +1536,8 @@ async function send() {
     txt.textContent = "（请鉴别此图）";
     userBubble.appendChild(txt);
   }
+  // 给用户气泡挂"编辑/复制"
+  attachUserActions(userBubble, () => prompt);
 
   // 清空图片预览
   pendingImage = null;
@@ -1530,30 +1627,10 @@ async function send() {
     }
     // 流式完成后：再渲染一次，保证完整
     bubble.innerHTML = renderRich(full);
-    // 注入复制按钮
+    // 注入"复制 + 追问"操作行（豆包风格，气泡下方）
     if (full.trim()) {
-      const copyBtn = document.createElement("button");
-      copyBtn.className = "copy-btn";
-      copyBtn.textContent = "📋 复制";
-      copyBtn.onclick = (ev) => {
-        ev.stopPropagation();
-        navigator.clipboard?.writeText(full).then(() => {
-          copyBtn.textContent = "✓ 已复制";
-          setTimeout(() => copyBtn.textContent = "📋 复制", 1500);
-        });
-      };
-      bubble.parentElement.appendChild(copyBtn);
-
-      // 注入快捷追问（基于上一轮 prompt 智能挑 2-3 条）
       const followups = pickFollowups(prompt, full);
-      if (followups.length) {
-        const fuBox = document.createElement("div");
-        fuBox.className = "followups";
-        fuBox.innerHTML = followups.map(q =>
-          `<span class="followup" data-q="${q.replace(/"/g, '&quot;')}">${q}</span>`
-        ).join("");
-        bubble.parentElement.appendChild(fuBox);
-      }
+      attachAssistantActions(bubble, () => full, followups);
     }
     history.push({ role: "user", content: prompt });
     history.push({ role: "assistant", content: full });

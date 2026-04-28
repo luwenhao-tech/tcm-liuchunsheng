@@ -303,7 +303,7 @@ async function loadAccounts() {
       <tr>
         <td>${i + 1}</td>
         <td><code style="background:#f7faf8;padding:2px 8px;border-radius:4px;color:#3a8f7a;font-size:13px;">${escapeHtml(a.account)}</code></td>
-        <td><code style="background:#fff8e3;padding:2px 8px;border-radius:4px;color:#6b4a24;font-size:13px;cursor:pointer;" onclick="copyText('${escapeHtml(a.password).replace(/'/g, "\\'")}')" title="点击复制">${escapeHtml(a.password)}</code></td>
+        <td><span style="color:#999;font-size:12px;letter-spacing:1px;">●●●●●● 已加密</span></td>
         <td><button onclick="delAccount('${escapeHtml(a.account).replace(/'/g, "\\'")}')" style="background:#fff;color:#a83224;border:1.5px solid #a83224;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;">删除</button></td>
       </tr>`).join("")
     : '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px;">暂无账号，请添加</td></tr>';

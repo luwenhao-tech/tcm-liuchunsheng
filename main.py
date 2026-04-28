@@ -1,11 +1,13 @@
 """FastAPI 入口：中药鉴定学 - 刘春生教授 AI 助教。
 支持多轮对话历史，流式 SSE 输出。
 """
+import hashlib
 import json
 import os
 import secrets
 import sqlite3
 import time
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -19,10 +21,15 @@ from llm_client import generate_stream, generate, vision_client
 
 app = FastAPI(title="中药鉴定学 - 刘春生教授 AI 助教")
 
+# CORS：默认收紧到自有域名，可通过 ALLOWED_ORIGINS 环境变量覆盖（逗号分隔）
+_default_origins = "https://lcsbucm.tech,https://www.lcsbucm.tech,http://localhost:8000,http://127.0.0.1:8000"
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -55,6 +62,15 @@ def init_db():
             conn.execute(f"ALTER TABLE chat_log ADD COLUMN {col}")
         except sqlite3.OperationalError:
             pass
+    # 登录 token 持久化
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS auth_token (
+            token TEXT PRIMARY KEY,
+            account TEXT NOT NULL,
+            name TEXT,
+            expires REAL NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -64,12 +80,28 @@ init_db()
 
 # ============ 账号系统 ============
 ACCOUNTS_PATH = Path(__file__).parent / "accounts.json"
-TOKENS: Dict[str, Dict] = {}  # token -> {account, name, expires}
 TOKEN_TTL = 7 * 24 * 3600  # 7 天
+PASSWORD_SALT = os.getenv("PASSWORD_SALT", "lcsbucm-tcm-2025")
+
+
+def _hash_password(raw: str) -> str:
+    """sha256(salt + password)，加 'sha256:' 前缀以兼容明文存量。"""
+    h = hashlib.sha256((PASSWORD_SALT + raw).encode("utf-8")).hexdigest()
+    return f"sha256:{h}"
+
+
+def _verify_password(raw: str, stored: str) -> bool:
+    """支持新格式（sha256:xxx）和遗留明文。"""
+    if not stored:
+        return False
+    if stored.startswith("sha256:"):
+        return secrets.compare_digest(stored, _hash_password(raw))
+    # 遗留明文：比对成功后由调用方负责升级
+    return secrets.compare_digest(stored, raw)
 
 
 def load_accounts() -> Dict[str, str]:
-    """读取 accounts.json：{ "account": "password", ... }"""
+    """读取 accounts.json：{ "account": "password_or_hash", ... }"""
     if not ACCOUNTS_PATH.exists():
         return {}
     try:
@@ -87,24 +119,69 @@ def load_accounts() -> Dict[str, str]:
 
 def issue_token(account: str, name: str) -> str:
     tk = secrets.token_urlsafe(24)
-    TOKENS[tk] = {
-        "account": account,
-        "name": name,
-        "expires": time.time() + TOKEN_TTL,
-    }
+    expires = time.time() + TOKEN_TTL
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
+            "INSERT OR REPLACE INTO auth_token (token, account, name, expires) VALUES (?, ?, ?, ?)",
+            (tk, account, name, expires),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[issue_token error] {e}")
     return tk
 
 
 def verify_token(token: Optional[str]) -> Optional[Dict]:
     if not token:
         return None
-    info = TOKENS.get(token)
-    if not info:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT account, name, expires FROM auth_token WHERE token=?", (token,)
+        ).fetchone()
+        if not row:
+            conn.close()
+            return None
+        if row["expires"] < time.time():
+            conn.execute("DELETE FROM auth_token WHERE token=?", (token,))
+            conn.commit()
+            conn.close()
+            return None
+        conn.close()
+        return {"account": row["account"], "name": row["name"], "expires": row["expires"]}
+    except Exception as e:
+        print(f"[verify_token error] {e}")
         return None
-    if info["expires"] < time.time():
-        TOKENS.pop(token, None)
-        return None
-    return info
+
+
+def revoke_account_tokens(account: str):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute("DELETE FROM auth_token WHERE account=?", (account,))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[revoke_account_tokens error] {e}")
+
+
+# ============ 接口限流（同一账号每分钟最多 N 次聊天）============
+RATE_LIMIT_WINDOW = 60  # 秒
+RATE_LIMIT_MAX = int(os.getenv("RATE_LIMIT_MAX", "20"))
+_rate_buckets: Dict[str, deque] = defaultdict(deque)
+
+
+def rate_limit_check(account: str):
+    now = time.time()
+    bucket = _rate_buckets[account]
+    while bucket and bucket[0] < now - RATE_LIMIT_WINDOW:
+        bucket.popleft()
+    if len(bucket) >= RATE_LIMIT_MAX:
+        retry = int(RATE_LIMIT_WINDOW - (now - bucket[0])) + 1
+        raise HTTPException(429, f"问得太快了，{retry} 秒后再试。")
+    bucket.append(now)
 
 
 class LoginRequest(BaseModel):
@@ -119,8 +196,16 @@ async def api_login(req: LoginRequest):
     acc = req.account.strip()
     if not acc or acc not in accounts:
         raise HTTPException(401, "账号不存在")
-    if accounts[acc] != req.password:
+    stored = accounts[acc]
+    if not _verify_password(req.password, stored):
         raise HTTPException(401, "密码错误")
+    # 遗留明文密码 → 登录成功后自动升级为哈希
+    if not stored.startswith("sha256:"):
+        accounts[acc] = _hash_password(req.password)
+        try:
+            save_accounts(accounts)
+        except Exception as e:
+            print(f"[upgrade hash error] {e}")
     name = (req.name or "").strip()[:32] or acc
     token = issue_token(acc, name)
     return {"token": token, "account": acc, "name": name}
@@ -169,6 +254,9 @@ class ChatRequest(BaseModel):
 async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(require_user)):
     if not req.prompt.strip() and not req.image:
         raise HTTPException(400, "问题不能为空")
+
+    # 限流：同一账号每分钟最多 RATE_LIMIT_MAX 次
+    rate_limit_check(user["account"])
 
     history_dicts: List[Dict[str, str]] = (
         [m.model_dump() for m in req.history] if req.history else []
@@ -328,7 +416,8 @@ async def admin_accounts_list(password: str = ""):
     if not check_admin(password):
         raise HTTPException(401, "密码错误")
     accs = load_accounts()
-    return {"accounts": [{"account": k, "password": v} for k, v in accs.items()]}
+    # 不回传密码/哈希，避免泄露
+    return {"accounts": [{"account": k, "has_password": bool(v)} for k, v in accs.items()]}
 
 
 @app.post("/api/admin/accounts/add")
@@ -343,7 +432,7 @@ async def admin_accounts_add(req: AccountAddReq):
     if not req.user_password:
         raise HTTPException(400, "密码不能为空")
     accs = load_accounts()
-    accs[acc] = req.user_password
+    accs[acc] = _hash_password(req.user_password)
     save_accounts(accs)
     return {"ok": True}
 
@@ -357,9 +446,7 @@ async def admin_accounts_delete(req: AccountDelReq):
         accs.pop(req.account)
         save_accounts(accs)
         # 立即使该账号当前所有 token 失效
-        for tk in list(TOKENS.keys()):
-            if TOKENS[tk]["account"] == req.account:
-                TOKENS.pop(tk, None)
+        revoke_account_tokens(req.account)
     return {"ok": True}
 
 

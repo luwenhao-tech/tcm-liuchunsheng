@@ -379,6 +379,8 @@
     max-width: 100%;
   }
   .bubble strong { font-weight: 900; color: #ff6b5a; font-family: "PingFang SC Heavy", "Microsoft YaHei", "Heiti SC", "SimHei", sans-serif; }
+  .bubble .kw-title { color: #6d4c1b; font-weight: 700; letter-spacing: 1px; }
+  .bubble .kw-book { color: #2f6b48; font-style: normal; }
   .msg.assistant { position: relative; }
   .msg.assistant .copy-btn {
     position: absolute; right: 8px; bottom: 4px;
@@ -1197,6 +1199,14 @@ function renderHistList() {
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+// 富文本渲染：**加粗** / 「关键」/ 【小标题】 / 《书名》
+function renderRich(s) {
+  return escapeHtml(s)
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/「([^」\n]+)」/g, '<strong>$1</strong>')
+    .replace(/【([^】\n]+)】/g, '<span class="kw-title">【$1】</span>')
+    .replace(/《([^》\n]+)》/g, '<span class="kw-book">《$1》</span>');
+}
 function loadSession(id) {
   const sessions = loadSessions();
   const s = sessions.find(x => x.id === id);
@@ -1233,9 +1243,7 @@ function addMsg(role, content) {
   const bubble = div.querySelector(".bubble");
   if (content) {
     if (role === "assistant") {
-      bubble.innerHTML = escapeHtml(content)
-        .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/「([^」\n]+)」/g, '<strong>$1</strong>');
+      bubble.innerHTML = renderRich(content);
     } else {
       bubble.textContent = content;
     }
@@ -1341,7 +1349,7 @@ async function send() {
           if (obj.token) {
             if (firstToken) { bubble.textContent = ""; firstToken = false; }
             full += obj.token;
-            bubble.textContent = full;
+            bubble.innerHTML = renderRich(full);
             chat.scrollTop = chat.scrollHeight;
           }
           if (obj.error) {
@@ -1356,10 +1364,8 @@ async function send() {
         } catch (e) {}
       }
     }
-    // 流式完成后：转换 **加粗** 为 <strong>
-    bubble.innerHTML = escapeHtml(full)
-      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/「([^」\n]+)」/g, '<strong>$1</strong>');
+    // 流式完成后：再渲染一次，保证完整
+    bubble.innerHTML = renderRich(full);
     // 注入复制按钮
     if (full.trim()) {
       const copyBtn = document.createElement("button");

@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse, JSO
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from llm_client import generate_stream, generate, vision_client
+from llm_client import generate_stream, generate, vision_client, generate_followups
 
 app = FastAPI(title="中药鉴定学 - 刘春生教授 AI 助教")
 
@@ -338,6 +338,32 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
 async def api_features():
     """前端启动时查询哪些可选功能（如视觉）可用。"""
     return {"vision": vision_client is not None}
+
+
+class FollowupReq(BaseModel):
+    prompt: str
+    answer: str
+    existing: Optional[List[str]] = None
+
+
+@app.post("/api/followups")
+async def api_followups(req: FollowupReq, user: Dict = Depends(require_user)):
+    """根据本次问答 + 当前页面已出现的追问，生成 3 条全新追问。"""
+    if not req.answer.strip():
+        return {"followups": []}
+    qs = await generate_followups(req.prompt or "", req.answer, req.existing or [])
+    # 二次保险：服务端再做一次去重（按归一化键）
+    seen = set()
+    norm = lambda s: re.sub(r"[\s。．\.,，、!！?？:：;；~～\-—_…\"'《》()（）\[\]【】]", "", (s or "")).lower()
+    for e in (req.existing or []):
+        seen.add(norm(e))
+    out = []
+    for q in qs:
+        k = norm(q)
+        if k and k not in seen:
+            seen.add(k)
+            out.append(q)
+    return {"followups": out}
 
 
 # ============ 管理后台 ============

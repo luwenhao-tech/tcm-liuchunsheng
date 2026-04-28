@@ -279,3 +279,68 @@ async def generate(
             kwargs["temperature"] = temperature
         resp = await client.chat.completions.create(**kwargs)
     return resp.choices[0].message.content or ""
+
+
+# ============ 追问生成器 ============
+FOLLOWUP_GEN_SYSTEM = """你是"中医药教学追问生成器"。
+任务：基于【学生本次提问】和【老师本次回答】，生成 3 条简短的、学生可能会接着问的追问。
+
+硬性要求：
+1. 必须紧扣本次提问与本次回答的具体内容（涉及到的药名、特征、术语、考点等），不能泛泛。
+2. 每条追问 ≤ 22 字，开放或选择式，问号结尾，不要"懂了吗""明白吗"。
+3. 不要带 emoji、不要带「💬」、不要带编号或前缀，纯问句。
+4. 三条之间方向要尽量不同（可选维度：伪品/道地/炮制/配伍/临床/对比/考点/显微/口诀/标本观察）。
+5. ★绝对不许与下方"已经出现过的追问清单"中任何一条相同或同义改写★。
+6. 只输出 JSON 数组，例如：["问题一？","问题二？","问题三？"]，不要别的字符。
+"""
+
+
+async def generate_followups(user_prompt: str, answer: str, existing: Optional[List[str]] = None) -> List[str]:
+    """根据 (问题+回答) 生成 3 条追问，避开 existing 中已出现的。失败返回 []。"""
+    import json as _json
+    existing = existing or []
+    bullet = "\n".join(f"  - {q}" for q in existing) if existing else "（无）"
+    user_msg = (
+        f"【学生本次提问】\n{user_prompt[:600]}\n\n"
+        f"【老师本次回答】\n{(answer or '')[:1500]}\n\n"
+        f"【已经出现过的追问清单，全部要避开，禁同义改写】\n{bullet}\n\n"
+        "请输出 3 条全新追问的 JSON 数组。"
+    )
+    try:
+        resp = await client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": FOLLOWUP_GEN_SYSTEM},
+                {"role": "user", "content": user_msg},
+            ],
+            temperature=0.8,
+        )
+        text = (resp.choices[0].message.content or "").strip()
+    except Exception as e:
+        print(f"[generate_followups error] {e}")
+        return []
+    # 尽力解析 JSON 数组
+    if not text:
+        return []
+    # 取第一个 [ 到最后一个 ] 之间
+    l, r = text.find("["), text.rfind("]")
+    if l == -1 or r == -1 or r < l:
+        return []
+    try:
+        arr = _json.loads(text[l:r + 1])
+    except Exception:
+        return []
+    out: List[str] = []
+    for q in arr:
+        if not isinstance(q, str):
+            continue
+        q = q.strip().strip("「」\"' ")
+        if not q:
+            continue
+        if q[-1] not in "?？":
+            q = q + "？"
+        if len(q) > 26:
+            continue
+        if q not in out:
+            out.append(q)
+    return out[:3]

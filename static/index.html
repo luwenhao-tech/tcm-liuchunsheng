@@ -1756,8 +1756,45 @@ async function send() {
     bubble.innerHTML = renderRich(full);
     // 注入"复制 + 追问"操作行（豆包风格，气泡下方）
     if (full.trim()) {
-      const followups = pickFollowups(prompt, full);
-      attachAssistantActions(bubble, () => full, followups);
+      // 先挂上"复制"行，追问气泡稍后异步填充
+      attachAssistantActions(bubble, () => full, []);
+      // 把当前页面已出现的追问/反问/用户提问全部喂给后端去重
+      const existing = Array.from(collectAskedChipsAndFollowups());
+      // collectAskedChipsAndFollowups 返回的是归一化 key 的 set，不利于让模型理解；
+      // 这里换成原文集合：直接扫 dom + history
+      const existingRaw = [];
+      const seen = new Set();
+      const pushRaw = (s) => {
+        const t = (s || "").trim();
+        if (!t) return;
+        const k = t.replace(/\s+/g, "");
+        if (seen.has(k)) return;
+        seen.add(k); existingRaw.push(t);
+      };
+      document.querySelectorAll(".followup").forEach(el => pushRaw(el.textContent));
+      for (const m of (history || [])) {
+        if (m.role === "user") pushRaw(m.content);
+        if (m.role === "assistant") {
+          (m.content || "").split("\n").forEach(ln => {
+            const s = ln.trim();
+            if (s && /[？?]\s*$/.test(s)) pushRaw(s.replace(/^💬\s*/, ""));
+          });
+        }
+      }
+      pushRaw(prompt);
+      // 异步拉追问
+      fetch("/api/followups", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + (localStorage.getItem("tcm_token") || ""),
+        },
+        body: JSON.stringify({ prompt, answer: full, existing: existingRaw }),
+      }).then(r => r.ok ? r.json() : null).then(d => {
+        if (d && Array.isArray(d.followups) && d.followups.length) {
+          attachAssistantActions(bubble, () => full, d.followups);
+        }
+      }).catch(() => {});
     }
     history.push({ role: "user", content: prompt });
     history.push({ role: "assistant", content: full });

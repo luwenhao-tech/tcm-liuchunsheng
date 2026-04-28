@@ -267,6 +267,43 @@ def extract_followups(history: List[Dict[str, str]]) -> List[str]:
     return collected
 
 
+def _extract_followup_from_text(content: str) -> Optional[str]:
+    content = (content or "").strip()
+    if not content:
+        return None
+    m = _FOLLOWUP_RE.search(content)
+    if m:
+        return m.group(1).strip()
+    last_line = content.splitlines()[-1].strip() if content else ""
+    if last_line and last_line[-1] in "?？" and 6 <= len(last_line) <= 60:
+        return last_line
+    return None
+
+
+def load_account_followups(account: str, limit: int = 2000) -> List[str]:
+    """从 chat_log 拉该账号过去所有 answer，抽出末尾反问，去重保序。"""
+    if not account:
+        return []
+    collected: List[str] = []
+    seen = set()
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        rows = conn.execute(
+            "SELECT answer FROM chat_log WHERE user_id=? ORDER BY id ASC LIMIT ?",
+            (account, limit),
+        ).fetchall()
+        conn.close()
+    except Exception as e:
+        print(f"[load_account_followups error] {e}")
+        return []
+    for (answer,) in rows:
+        q = _extract_followup_from_text(answer or "")
+        if q and q not in seen:
+            seen.add(q)
+            collected.append(q)
+    return collected
+
+
 class ChatRequest(BaseModel):
     prompt: str
     history: Optional[List[Message]] = None
@@ -301,12 +338,18 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
     # 日志里的 prompt 标记是否带图
     prompt_for_log = req.prompt + ("  [📷 含图片]" if req.image else "")
 
-    # 历史反问去重：把整段会话已问过的清单注入 system，让模型避开
+    # 历史反问去重：当前会话 + 该账号过去所有回复（DB），合并去重
     asked_qs = extract_followups(history_dicts)
+    db_qs = load_account_followups(user_id)
+    seen = set(asked_qs)
+    for q in db_qs:
+        if q not in seen:
+            seen.add(q)
+            asked_qs.append(q)
     extra_sys = ""
     if asked_qs:
         bullet = "\n".join(f"  - {q}" for q in asked_qs)
-        extra_sys = "\n\n【本会话已问过的反问，整段会话里都严禁再问以下任何一条或其同义改写】\n" + bullet + "\n本次反问必须避开以上全部，挑全新角度提问。"
+        extra_sys = "\n\n【您过去对该同学问过的所有反问，本次以及今后都严禁再问以下任何一条或其同义改写】\n" + bullet + "\n本次反问必须全部避开以上，挑全新角度提问。"
 
     if not req.stream:
         text = await generate(

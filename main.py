@@ -4,6 +4,7 @@
 import hashlib
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
@@ -239,6 +240,34 @@ class Message(BaseModel):
     content: str
 
 
+_FOLLOWUP_RE = re.compile(r"(💬[^\n]*[？?])\s*$")
+
+
+def extract_followups(history: List[Dict[str, str]]) -> List[str]:
+    """从历史 assistant 回复里提取末尾反问。
+    优先抓「💬 …？」格式；没有则取最后一行（以 ?/？ 结尾且长度 6-60）。
+    去重保序，最多返回最近 15 条。
+    """
+    collected: List[str] = []
+    for msg in history or []:
+        if msg.get("role") != "assistant":
+            continue
+        content = (msg.get("content") or "").strip()
+        if not content:
+            continue
+        m = _FOLLOWUP_RE.search(content)
+        q: Optional[str] = None
+        if m:
+            q = m.group(1).strip()
+        else:
+            last_line = content.splitlines()[-1].strip() if content else ""
+            if last_line and last_line[-1] in "?？" and 6 <= len(last_line) <= 60:
+                q = last_line
+        if q and q not in collected:
+            collected.append(q)
+    return collected[-15:]
+
+
 class ChatRequest(BaseModel):
     prompt: str
     history: Optional[List[Message]] = None
@@ -273,11 +302,19 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
     # 日志里的 prompt 标记是否带图
     prompt_for_log = req.prompt + ("  [📷 含图片]" if req.image else "")
 
+    # 历史反问去重：把已问过的清单注入 system，让模型避开
+    asked_qs = extract_followups(history_dicts)
+    extra_sys = ""
+    if asked_qs:
+        bullet = "\n".join(f"  - {q}" for q in asked_qs)
+        extra_sys = "\n\n【本会话已问过的反问，严禁再问以下或其同义改写】\n" + bullet + "\n本次反问必须避开以上方向，挑全新角度。"
+
     if not req.stream:
         text = await generate(
             req.prompt, history=history_dicts,
             temperature=req.temperature, think=req.think,
             image_data=req.image, user_name=user_name,
+            extra_system=extra_sys,
         )
         log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
         return {"content": text}
@@ -289,6 +326,7 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
                 req.prompt, history=history_dicts,
                 temperature=req.temperature, think=req.think,
                 image_data=req.image, user_name=user_name,
+                extra_system=extra_sys,
             ):
                 full_answer += token
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"

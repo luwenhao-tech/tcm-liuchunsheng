@@ -244,9 +244,8 @@ _FOLLOWUP_RE = re.compile(r"(💬[^\n]*[？?])\s*$")
 
 
 def extract_followups(history: List[Dict[str, str]]) -> List[str]:
-    """从历史 assistant 回复里提取末尾反问。
+    """从历史 assistant 回复里提取末尾反问，整个会话全收，去重保序。
     优先抓「💬 …？」格式；没有则取最后一行（以 ?/？ 结尾且长度 6-60）。
-    去重保序，最多返回最近 15 条。
     """
     collected: List[str] = []
     for msg in history or []:
@@ -265,7 +264,7 @@ def extract_followups(history: List[Dict[str, str]]) -> List[str]:
                 q = last_line
         if q and q not in collected:
             collected.append(q)
-    return collected[-15:]
+    return collected
 
 
 class ChatRequest(BaseModel):
@@ -302,12 +301,12 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
     # 日志里的 prompt 标记是否带图
     prompt_for_log = req.prompt + ("  [📷 含图片]" if req.image else "")
 
-    # 历史反问去重：把已问过的清单注入 system，让模型避开
+    # 历史反问去重：把整段会话已问过的清单注入 system，让模型避开
     asked_qs = extract_followups(history_dicts)
     extra_sys = ""
     if asked_qs:
         bullet = "\n".join(f"  - {q}" for q in asked_qs)
-        extra_sys = "\n\n【本会话已问过的反问，严禁再问以下或其同义改写】\n" + bullet + "\n本次反问必须避开以上方向，挑全新角度。"
+        extra_sys = "\n\n【本会话已问过的反问，整段会话里都严禁再问以下任何一条或其同义改写】\n" + bullet + "\n本次反问必须避开以上全部，挑全新角度提问。"
 
     if not req.stream:
         text = await generate(

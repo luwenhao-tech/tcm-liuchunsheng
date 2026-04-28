@@ -619,7 +619,6 @@
         <div class="big" id="welcomeBig">嘿，同学来啦？</div>
         我是刘春生教授的 AI 助教。<br/>
         今儿想聊哪味药，哪个知识点？您说话。
-        <div class="quick" id="quickBox"></div>
       </div>
     </div>
 
@@ -900,50 +899,6 @@ fetch("/api/features").then(r => r.json()).then(d => {
   }
 }).catch(() => {});
 
-/* ============ 欢迎页快捷提问（每次刷新随机抽 5 题）============ */
-const QUICK_QUESTIONS = [
-  // 性状鉴别类
-  "人参的性状鉴别要点", "黄连的性状鉴别", "大黄怎么鉴别真伪？",
-  "甘草的显微鉴别特征", "当归的性状特征", "何首乌的鉴别要点",
-  "三七的鉴别要点", "天麻的性状鉴别", "川芎的性状鉴别",
-  "白芍的性状鉴别", "黄芪的性状鉴别", "防风的性状鉴别",
-  "党参和人参怎么区分？", "川贝母和浙贝母怎么分？",
-  "茅苍术和北苍术的区别", "生地和熟地怎么辨？",
-  // 概念/总论类
-  "中药鉴定的依据有哪些？", "什么叫『道地药材』？举几个例子",
-  "鉴定四要是什么？", "中药鉴定的取样原则",
-  "显微鉴别和性状鉴别的区别",
-  "什么是水试？哪些药材常用？",
-  // 经验术语类
-  "什么是菊花心？举例", "哪些药材有朱砂点？",
-  "讲讲起霜", "鹦哥嘴是哪味药？",
-  "过桥是什么？", "什么叫怀中抱月？",
-  "什么是云锦花纹？", "什么是金井玉栏？",
-  "蚯蚓头指什么？", "珍珠疙瘩是什么？",
-  "铜皮铁骨指什么药材？", "狮子盘头举例",
-  // 药材来源
-  "金银花和山银花有什么区别？",
-  "黄连有几种来源？", "石斛和铁皮石斛是一种吗？",
-  "大青叶来源于哪几种植物？",
-  "贝母类药材有几种？怎么分？",
-];
-
-function renderQuickQuestions() {
-  const box = document.getElementById("quickBox");
-  if (!box) return;
-  // 按日期 + 用户名做种子：同一天/同一人看到的 5 道是稳定的，第二天换
-  const seedStr = (localStorage.getItem("tcm_user_name") || "guest") + "_" + new Date().toDateString();
-  let seed = 0;
-  for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
-  const arr = QUICK_QUESTIONS.slice();
-  for (let i = arr.length - 1; i > 0; i--) {
-    seed = (seed * 1103515245 + 12345) >>> 0;
-    const j = seed % (i + 1);
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  box.innerHTML = arr.slice(0, 5).map(q => `<span>${q}</span>`).join("");
-}
-
 /* ============ 侧栏内容轮换（每 10 分钟一组）============ */
 const DRAWER_GROUPS = [
   // 第 1 组：常考根茎类
@@ -1019,9 +974,6 @@ function renderSidebars() {
   // 用当前 10 分钟时段做种子，保证同一时段所有用户看到同一组
   const slot = Math.floor(Date.now() / (10 * 60 * 1000));
   const idx = slot % 3;
-
-  // 顺便刷新欢迎页快捷提问
-  renderQuickQuestions();
 
   const drawerBox = $("drawerBox");
   if (drawerBox) {
@@ -1401,10 +1353,8 @@ $("clear").onclick = () => {
   const greet = uname ? `${uname} 同学，咱重开个话头儿` : "嘿，咱重开个话头儿";
   chat.innerHTML = `<div class="welcome" id="welcome">
     <div class="big">${greet}</div>
-    今儿想聊哪味药？换几道试试：
-    <div class="quick" id="quickBox"></div>
+    今儿想聊哪味药？您说话。
   </div>`;
-  renderQuickQuestions();  // 清空后再随机一组
 };
 $("prompt").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }

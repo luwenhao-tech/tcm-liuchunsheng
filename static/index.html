@@ -1698,6 +1698,18 @@ async function send() {
             bubble.innerHTML = renderRich(full);
             chat.scrollTop = chat.scrollHeight;
           }
+          if (obj.replace_followup) {
+            const oldQ = obj.replace_followup.old || "";
+            const newQ = obj.replace_followup.new || "";
+            if (oldQ && newQ) {
+              const idx = full.lastIndexOf(oldQ);
+              if (idx >= 0) {
+                full = full.slice(0, idx).replace(/\s+$/, "") + "\n\n" + newQ;
+                bubble.innerHTML = renderRich(full);
+                chat.scrollTop = chat.scrollHeight;
+              }
+            }
+          }
           if (obj.error) {
             const raw = String(obj.error || "");
             let friendly = "刘老师这会儿翻医书呢，您稍候再问一遍。";

@@ -315,6 +315,91 @@ class ChatRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+_NORM_STRIP_RE = re.compile(r"[\s。．\.,，、!！?？:：;；~～\-—_…\"'《》()（）\[\]【】]")
+
+
+def _normalize_q(q: str) -> str:
+    """归一化反问：去掉 💬 前缀、所有标点空白，留下纯字内容做相似度比较。"""
+    if not q:
+        return ""
+    s = q.replace("💬", "").strip()
+    s = _NORM_STRIP_RE.sub("", s)
+    return s.lower()
+
+
+def _ngrams(s: str, n: int = 3) -> set:
+    if len(s) < n:
+        return {s} if s else set()
+    return {s[i:i + n] for i in range(len(s) - n + 1)}
+
+
+def _too_similar(a: str, b: str, threshold: float = 0.55) -> bool:
+    """3-gram Jaccard 相似度 ≥ threshold 视为同义改写。短串 (<6 字) 走完全相等。"""
+    na, nb = _normalize_q(a), _normalize_q(b)
+    if not na or not nb:
+        return False
+    if na == nb:
+        return True
+    if len(na) < 6 or len(nb) < 6:
+        return na == nb
+    ga, gb = _ngrams(na), _ngrams(nb)
+    if not ga or not gb:
+        return False
+    inter = len(ga & gb)
+    union = len(ga | gb)
+    return union > 0 and inter / union >= threshold
+
+
+def find_duplicate(new_q: str, asked: List[str]) -> Optional[str]:
+    for old in asked:
+        if _too_similar(new_q, old):
+            return old
+    return None
+
+
+async def _regen_followup(user_prompt: str, prev_answer: str, asked: List[str], max_tries: int = 4) -> str:
+    """让模型重新只生成一条不与 asked 撞的反问。返回 '💬 …？' 形式的字符串，或空串。"""
+    bullet = "\n".join(f"  - {q}" for q in asked) if asked else "（无）"
+    sys = (
+        "你是刘春生教授助教。现在只需要为下面这次回答补一条收尾反问，"
+        "格式『💬 』开头，10-25 字，开放或选择式，与本次内容相关。"
+        "★绝对不能与下列任何一条反问相同或同义改写★。只输出这一行，不要别的。\n\n"
+        f"【已问过的反问，全部要避开】\n{bullet}\n"
+    )
+    user_msg = f"学生问：{user_prompt}\n\n你这次回答的正文：\n{prev_answer[:1200]}\n\n现在只输出一条全新角度的收尾反问。"
+    for _ in range(max_tries):
+        try:
+            text = await generate(user_msg, system_prompt=sys, temperature=0.9)
+        except Exception as e:
+            print(f"[regen_followup error] {e}")
+            return ""
+        text = (text or "").strip().splitlines()[-1].strip() if text else ""
+        if not text:
+            continue
+        if "💬" not in text:
+            text = "💬 " + text.lstrip("💬 ").strip()
+        if text and text[-1] not in "?？":
+            text = text + "？"
+        if not find_duplicate(text, asked):
+            return text
+    return ""
+
+
+async def _ensure_unique_followup(text: str, user_prompt: str, history_dicts: List[Dict[str, str]],
+                                   asked: List[str], think: bool) -> str:
+    """非流式路径兜底：撞了就把末尾反问换成新生成的。"""
+    new_q = _extract_followup_from_text(text)
+    if not new_q or not find_duplicate(new_q, asked):
+        return text
+    replacement = await _regen_followup(user_prompt, text, asked)
+    if not replacement:
+        return text
+    idx = text.rfind(new_q)
+    if idx < 0:
+        return text
+    return text[:idx].rstrip() + "\n\n" + replacement
+
+
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(require_user)):
     if not req.prompt.strip() and not req.image:
@@ -358,6 +443,8 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
             image_data=req.image, user_name=user_name,
             extra_system=extra_sys,
         )
+        # 兜底：检测末尾反问是否与历史撞，撞了就重生成一条替换
+        text = await _ensure_unique_followup(text, req.prompt, history_dicts, asked_qs, req.think)
         log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
         return {"content": text}
 
@@ -372,6 +459,28 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
             ):
                 full_answer += token
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+            # 流式结束后兜底校验末尾反问
+            new_q = _extract_followup_from_text(full_answer)
+            if new_q and find_duplicate(new_q, asked_qs):
+                replacement = await _regen_followup(req.prompt, full_answer, asked_qs)
+                if replacement:
+                    # 把旧反问从 full_answer 里切掉，追加新反问
+                    idx = full_answer.rfind(new_q)
+                    if idx >= 0:
+                        head = full_answer[:idx].rstrip()
+                        # 流给前端：先发清除标记 + 新反问
+                        delta = "\n\n" + replacement
+                        # 简单处理：把 "新反问替换标记" 作为一段补发，前端按 token 拼接即可
+                        # 为了保持一致，我们把"换行+新反问"补发，并在日志里替换
+                        full_answer = head + delta
+                        # 把替换内容作为额外 token 发给前端（带一个特殊提示前缀让旧反问失效不太可能，
+                        # 简化方案：直接补发新反问，前端会显示出来。旧反问已经显示了，无法回收）
+                        # 因此更稳的策略：发送 replace 事件让前端覆盖
+                        replace_payload = json.dumps(
+                            {"replace_followup": {"old": new_q, "new": replacement.strip()}},
+                            ensure_ascii=False,
+                        )
+                        yield f"data: {replace_payload}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:
             err = json.dumps({"error": str(e)}, ensure_ascii=False)

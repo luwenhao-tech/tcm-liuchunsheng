@@ -624,11 +624,11 @@
       <h2 style="margin:12px 0 4px;color:var(--bucm-green);font-size:20px;letter-spacing:3px;">春生说药</h2>
       <div style="font-size:12px;color:#8a6a3a;letter-spacing:2px;">刘春生教授 AI 助教 · 北京中医药大学中药学院</div>
     </div>
-    <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">同学姓名</label>
+    <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">您的称呼</label>
     <input id="loginName" type="text" placeholder="请输入您的姓名" autocomplete="off"
       style="width:100%;padding:11px 14px;border:1.5px solid #c9a771;border-radius:8px;background:#fff;font-size:14px;color:#3d2a14;outline:none;box-sizing:border-box;margin-bottom:14px;"/>
     <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">账号</label>
-    <input id="loginAccount" type="text" placeholder="老师发给您的账号" autocomplete="username"
+    <input id="loginAccount" type="text" placeholder="管理员发给您的账号" autocomplete="username"
       style="width:100%;padding:11px 14px;border:1.5px solid #c9a771;border-radius:8px;background:#fff;font-size:14px;color:#3d2a14;outline:none;box-sizing:border-box;margin-bottom:14px;"/>
     <label style="display:block;font-size:12px;color:#6b4a24;margin-bottom:6px;letter-spacing:1px;">密码</label>
     <input id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password"
@@ -669,9 +669,9 @@
       <div class="drawers" id="drawerBox"></div>
     </div>
 
-    <!-- 今日考点 -->
+    <!-- 今日要点 -->
     <div class="panel">
-      <h3><span class="dot"></span>今日考点</h3>
+      <h3><span class="dot"></span>今日要点</h3>
       <div class="quote" id="dailyExamBox" style="line-height:1.75;font-size:12.5px;"></div>
     </div>
   </aside>
@@ -698,7 +698,7 @@
 
     <div class="chat" id="chat">
       <div class="welcome" id="welcome">
-        <div class="big" id="welcomeBig">嘿，同学来啦？</div>
+        <div class="big" id="welcomeBig">嘿，您来啦？</div>
         我是刘春生教授的 AI 助教。<br/>
         今儿想聊哪味药，哪个知识点？您说话。
         <div id="dailyQuote" style="margin-top:18px;padding-top:14px;border-top:1px dashed #d4c8a0;font-size:12.5px;color:#8a6f3a;letter-spacing:1px;line-height:1.9;"></div>
@@ -936,7 +936,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("userName").textContent = "👤 " + name;
     chip.style.display = "inline-flex";
     const big = document.getElementById("welcomeBig");
-    if (big) big.textContent = `${name} 同学来啦？`;
+    if (big) big.textContent = `${name}，您来啦？`;
   };
   if (saved && token) {
     mask.classList.add("hidden");
@@ -1405,13 +1405,13 @@ function pickFollowups(userPrompt, answer) {
   const list = [];
   // 类型识别
   if (/区别|区分|怎么分|vs|对比/.test(p)) {
-    list.push("还有哪些类似的易混品？", "考研常考这俩怎么出题？");
+    list.push("还有哪些类似的易混品？", "这俩临床用法有何不同？");
   } else if (/什么是|是什么|什么叫|含义|定义/.test(p)) {
-    list.push("举几个对应的药材例子", "这部分常见考点是什么？");
+    list.push("举几个对应的药材例子", "这部分有什么记忆要点？");
   } else if (drug && /鉴别|性状|真伪|怎么辨|看图|这是什么|要点|特征/.test(p)) {
     list.push(`${drug}的常见伪品`, `${drug}的显微鉴别`, `${drug}的道地产区`);
-  } else if (drug && /考点|考研|重点|考试|笔记/.test(p)) {
-    list.push(`${drug}的鉴别要点`, `${drug}的伪品`, "再来一组高频考点");
+  } else if (drug && /考点|考研|重点|考试|笔记|要点|记忆/.test(p)) {
+    list.push(`${drug}的鉴别要点`, `${drug}的伪品`, "再来一组重点");
   } else if (drug) {
     // 直接问药名，比如"人参"
     list.push(`${drug}的鉴别要点`, `${drug}的伪品`, `${drug}的道地产区`);
@@ -1643,7 +1643,7 @@ async function send() {
             const raw = String(obj.error || "");
             let friendly = "刘老师这会儿翻医书呢，您稍候再问一遍。";
             if (/timeout|timed.*out|ETIMEDOUT/i.test(raw)) friendly = "网络有点慢，老师没来得及回话——再点一次试试。";
-            else if (/429|rate.?limit|too many/i.test(raw)) friendly = "今儿来问的同学多，请隔几秒再问。";
+            else if (/429|rate.?limit|too many/i.test(raw)) friendly = "今儿来问的人多，请隔几秒再问。";
             else if (/401|403|unauthorized|api.?key/i.test(raw)) friendly = "API 凭证失效，请联系管理员。";
             else if (/insufficient|quota|余额/i.test(raw)) friendly = "API 额度不够了，麻烦联系管理员充值。";
             bubble.innerHTML = `<span style="color:#c44a3a;">⚠️ ${friendly}</span>`;
@@ -1676,7 +1676,7 @@ $("clear").onclick = () => {
   history = [];
   currentSessionId = null;  // 开启一段新的
   const uname = localStorage.getItem("tcm_user_name") || "";
-  const greet = uname ? `${uname} 同学，咱重开个话头儿` : "嘿，咱重开个话头儿";
+  const greet = uname ? `${uname}，咱重开个话头儿` : "嘿，咱重开个话头儿";
   chat.innerHTML = `<div class="welcome" id="welcome">
     <div class="big">${greet}</div>
     今儿想聊哪味药？您说话。

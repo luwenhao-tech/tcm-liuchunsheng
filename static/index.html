@@ -742,15 +742,6 @@
       </div>
     </div>
 
-    <div class="intent-bar" id="intentBar" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:6px 16px 0;font-size:12px;">
-      <span style="color:#8a6f3a;letter-spacing:1px;align-self:center;">意图：</span>
-      <button type="button" class="intent-chip" data-intent="">自动</button>
-      <button type="button" class="intent-chip" data-intent="identify">🔍 药材鉴别</button>
-      <button type="button" class="intent-chip" data-intent="concept">📖 概念总论</button>
-      <button type="button" class="intent-chip" data-intent="exam">📝 考点速记</button>
-      <button type="button" class="intent-chip" data-intent="compare">⚖️ 易混对比</button>
-    </div>
-
     <div class="inputbar">
       <textarea id="prompt" placeholder="您说话，Enter 发送，Shift+Enter 换行；点 📷 传图鉴别"></textarea>
       <input type="file" id="imgInput" accept="image/*" style="display:none;" />
@@ -1238,25 +1229,6 @@ function renderSidebars() {
 
   const examBox = $("dailyExamBox");
   if (examBox) examBox.innerHTML = EXAM_GROUPS[examIdx];
-
-  // 意图分流芯片
-  const intentBar = document.getElementById("intentBar");
-  if (intentBar) {
-    window.__intent = localStorage.getItem("tcm_intent") || "";
-    const refreshIntent = () => {
-      intentBar.querySelectorAll(".intent-chip").forEach(b => {
-        b.classList.toggle("active", (b.dataset.intent || "") === (window.__intent || ""));
-      });
-    };
-    refreshIntent();
-    intentBar.addEventListener("click", e => {
-      const btn = e.target.closest(".intent-chip");
-      if (!btn) return;
-      window.__intent = btn.dataset.intent || "";
-      localStorage.setItem("tcm_intent", window.__intent);
-      refreshIntent();
-    });
-  }
 
   const rhymeBox = $("rhymeBox");
   if (rhymeBox) {
@@ -1767,7 +1739,6 @@ async function send() {
         prompt, history, stream: true, think: thinkMode, image,
         user_name: localStorage.getItem("tcm_user_name") || "",
         user_id: localStorage.getItem("tcm_user_id") || "",
-        intent: window.__intent || "",
       }),
     });
 

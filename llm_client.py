@@ -231,6 +231,52 @@ def resolve_intent_extra(intent: Optional[str]) -> str:
     return INTENT_EXTRAS.get(intent.strip().lower(), "")
 
 
+# ============ 自动意图识别 ============
+INTENT_CLASSIFY_SYSTEM = """你是中医药教学场景的意图分类器。仅输出一个英文标签，禁止任何解释、标点、空格。
+四个候选标签：
+- identify：学生在做"鉴别 / 真假判断 / 看图识药"，原话常含"这是""真假""看看""帮我认""是不是 xx""鉴定一下"，或附了图片。
+- compare：学生在做"两味药对比"，原话含"vs""和""与""哪个""怎么分""怎么区分""有什么区别"。
+- exam：学生在问"考点 / 考研重点 / 期末 / 速记 / 笔记 / 复习"。
+- concept：其余所有概念解释、术语定义、单味药介绍、原理科普。
+
+只输出 identify / compare / exam / concept 之一，多余字符一律不许。"""
+
+
+async def classify_intent(user_prompt: str, has_image: bool = False) -> str:
+    """轻量意图分类：返回 identify | compare | exam | concept。失败回退 concept。"""
+    if has_image:
+        return "identify"  # 带图直接走鉴别档，省一次调用
+    text = (user_prompt or "").strip()
+    if not text:
+        return "concept"
+    # 简单启发式先兜底，避免短问题/明显模式也调用 LLM
+    quick = text.lower()
+    if any(k in text for k in ("vs", "VS", " 和 ", "怎么分", "怎么区分", "有什么区别", "怎么辨")):
+        return "compare"
+    if any(k in text for k in ("考点", "考研", "期末", "速记", "笔记", "复习重点")):
+        return "exam"
+    if any(k in text for k in ("这是", "真假", "帮我认", "帮我看看", "鉴定一下", "是不是")):
+        return "identify"
+    # 其它情况让小模型判
+    try:
+        resp = await client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": INTENT_CLASSIFY_SYSTEM},
+                {"role": "user", "content": text[:300]},
+            ],
+            temperature=0,
+            max_tokens=4,
+        )
+        out = (resp.choices[0].message.content or "").strip().lower()
+        for label in ("identify", "compare", "exam", "concept"):
+            if label in out:
+                return label
+    except Exception as e:
+        print(f"[classify_intent error] {e}")
+    return "concept"
+
+
 async def generate_stream(
     user_prompt: str,
     system_prompt: Optional[str] = None,

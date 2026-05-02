@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse, JSO
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from llm_client import generate_stream, generate, vision_client, generate_followups, resolve_intent_extra
+from llm_client import generate_stream, generate, vision_client, generate_followups, resolve_intent_extra, classify_intent
 
 app = FastAPI(title="中药鉴定学 - 刘春生教授 AI 助教")
 
@@ -291,9 +291,11 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
 
     # 日志里的 prompt 标记是否带图
     prompt_for_log = req.prompt + ("  [📷 含图片]" if req.image else "")
-    intent_extra = resolve_intent_extra(req.intent)
-    if req.intent and intent_extra:
-        prompt_for_log = f"[意图:{req.intent}] " + prompt_for_log
+    # 自动识别意图（前端不再传，全部由后端判别）
+    detected_intent = await classify_intent(req.prompt, has_image=bool(req.image))
+    intent_extra = resolve_intent_extra(detected_intent)
+    if detected_intent:
+        prompt_for_log = f"[意图:{detected_intent}] " + prompt_for_log
 
     if not req.stream:
         text = await generate(

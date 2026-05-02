@@ -128,14 +128,18 @@
   .quote .mark { color: #a83224; font-size: 18px; font-weight: 700; }
 
   /* tag 标签 */
-  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tags { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .tag {
     background: #f5e6c4;
     border: 1px solid #c9a771;
     color: #6b2a10;
-    padding: 2px 8px; border-radius: 10px;
+    padding: 4px 6px; border-radius: 10px;
     font-size: 11px; cursor: pointer;
-    line-height: 1.5;
+    line-height: 1.4;
+    text-align: center;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 26px;
+    word-break: break-all;
   }
   .tag:hover { background: #ecd49a; }
   .tag.green { background: #e8eed7; border-color: #7a9461; color: #2f5233; }

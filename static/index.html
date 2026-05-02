@@ -729,6 +729,7 @@
         <span class="logout" id="logoutBtn" title="切换用户">退出</span>
       </span>
       <button class="hist-btn" id="newChatBtn">✨ 新对话</button>
+      <button class="hist-btn" id="themeBtn" title="换主题色">🎨 主题</button>
       <button class="hist-btn" id="paperBtn">📚 论著</button>
       <button class="hist-btn" id="histBtn">📜 历史</button>
     </header>
@@ -922,6 +923,17 @@
     </div>
   </div>
 </aside>
+
+<!-- 主题色选择浮层 -->
+<div id="themeMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;"></div>
+<div id="themePanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9001;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:20px 22px;width:520px;max-width:92vw;max-height:80vh;overflow-y:auto;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px dashed #d4c89c;padding-bottom:10px;">
+    <h3 style="margin:0;font-size:16px;color:#5a3a14;letter-spacing:2px;">🎨 主题色 · 选个您喜欢的</h3>
+    <button id="themeCloseBtn" style="background:none;border:none;color:#999;font-size:20px;cursor:pointer;padding:0 6px;">✕</button>
+  </div>
+  <div id="themeGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;"></div>
+  <div style="margin-top:14px;padding-top:10px;border-top:1px dashed #d4c89c;font-size:11px;color:#8a6f3a;text-align:center;letter-spacing:1px;">点击色块切换，自动保存到本机</div>
+</div>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -1941,6 +1953,110 @@ function showLogin() { $("loginMask").style.display = "flex"; }
 function hideLogin() { $("loginMask").style.display = "none"; }
 
 /* ============ 打卡功能已移除 ============ */
+
+/* ============ 主题色（30+ 配色） ============ */
+const THEMES = [
+  ["薄荷青(默认)","#5cc4a7","#3aa088","#ffd97a"],
+  ["岐黄深绿","#3a8f7a","#2a6f5e","#f2cc6b"],
+  ["朱砂红","#c44a3a","#a83224","#f5d76e"],
+  ["国槐黄","#b89a3e","#8a7228","#fff3b0"],
+  ["天青蓝","#4a90b8","#2e6e94","#f5e6c4"],
+  ["藏青","#2c4a6b","#1a3050","#d4af37"],
+  ["黛紫","#6b4a8a","#4a306e","#e8d4f0"],
+  ["茶褐","#8b5a2b","#6b3f18","#f0d9a8"],
+  ["柚子黄","#e8a838","#c8881e","#fff8d8"],
+  ["珊瑚粉","#e87c70","#c45a4e","#ffe8d8"],
+  ["桃粉","#f0a8b4","#d4768a","#fff0d8"],
+  ["梅子青","#7a9461","#5e7848","#f5e6c4"],
+  ["竹叶绿","#88b04b","#6b8a32","#fff8d8"],
+  ["松烟墨","#3a3f45","#1a1d1c","#d4c89c"],
+  ["靛青","#3a5a8c","#1e3d6b","#f0e8d4"],
+  ["胭脂","#a8324a","#7a1e30","#f5d4d4"],
+  ["明黄","#f0c040","#c89818","#fff8e0"],
+  ["檀香","#a87c4a","#8a5a28","#fff0d4"],
+  ["玄黑","#1a1d1c","#000000","#ffd97a"],
+  ["银杏","#d4af37","#a88820","#fff8e3"],
+  ["雪青","#9aa8d4","#6b78a8","#f5f0d4"],
+  ["豆青","#9ab87a","#7a9858","#fff8e0"],
+  ["藕荷","#c8a8c4","#a87aa4","#fff0e8"],
+  ["杏仁","#d4a878","#a87a48","#fff8e3"],
+  ["秋香","#a89860","#7a6840","#fff8d4"],
+  ["孔雀蓝","#1a8aa8","#0a6888","#f5e6c4"],
+  ["翡翠绿","#2ea88a","#1a7a60","#fff8e0"],
+  ["琥珀","#c08838","#8a5e1c","#fff3c0"],
+  ["丁香紫","#a890b4","#7a608a","#f5e8f0"],
+  ["黛绿","#3a5a48","#1e3a28","#d4c89c"],
+  ["柳绿","#88b888","#5a8a5a","#fff8d8"],
+  ["赭石","#a86438","#7a4218","#fff0d4"],
+];
+
+function applyTheme(t) {
+  const r = document.documentElement;
+  r.style.setProperty("--bucm-green", t[1]);
+  r.style.setProperty("--bucm-green-dark", t[2]);
+  r.style.setProperty("--bucm-gold", t[3]);
+  localStorage.setItem("tcm_theme", JSON.stringify(t));
+}
+
+function initTheme() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("tcm_theme") || "null");
+    if (Array.isArray(saved) && saved.length === 4) applyTheme(saved);
+  } catch (e) {}
+}
+
+function renderThemeGrid() {
+  const grid = document.getElementById("themeGrid");
+  if (!grid) return;
+  let saved = "";
+  try { saved = (JSON.parse(localStorage.getItem("tcm_theme") || "null") || [])[0] || ""; } catch (e) {}
+  grid.innerHTML = THEMES.map((t, i) => `
+    <div data-i="${i}" style="cursor:pointer;border-radius:8px;border:2px solid ${t[0]===saved?'#a83224':'transparent'};padding:4px;text-align:center;transition:all .15s;">
+      <div style="height:36px;border-radius:6px;background:linear-gradient(135deg,${t[1]} 0%,${t[2]} 100%);position:relative;border:1.5px solid ${t[3]};">
+        <span style="position:absolute;bottom:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:${t[3]};border:1.5px solid #fff;"></span>
+      </div>
+      <div style="font-size:11px;color:#5a3a14;margin-top:4px;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t[0]}</div>
+    </div>
+  `).join("");
+  grid.querySelectorAll("[data-i]").forEach(el => {
+    el.addEventListener("click", () => {
+      const t = THEMES[+el.dataset.i];
+      applyTheme(t);
+      renderThemeGrid();
+    });
+    el.addEventListener("mouseenter", () => { el.style.transform = "translateY(-2px)"; el.style.boxShadow = "0 4px 10px rgba(0,0,0,.12)"; });
+    el.addEventListener("mouseleave", () => { el.style.transform = ""; el.style.boxShadow = ""; });
+  });
+}
+
+function openTheme() {
+  renderThemeGrid();
+  document.getElementById("themeMask").style.display = "block";
+  document.getElementById("themePanel").style.display = "block";
+}
+function closeTheme() {
+  document.getElementById("themeMask").style.display = "none";
+  document.getElementById("themePanel").style.display = "none";
+}
+
+initTheme();
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("themeBtn");
+  if (btn) btn.onclick = openTheme;
+  const mask = document.getElementById("themeMask");
+  if (mask) mask.onclick = closeTheme;
+  const closeBtn = document.getElementById("themeCloseBtn");
+  if (closeBtn) closeBtn.onclick = closeTheme;
+});
+// 保险：脚本在 DOMContentLoaded 之后运行时直接绑定
+(function bindThemeNow(){
+  const btn = document.getElementById("themeBtn");
+  if (btn) btn.onclick = openTheme;
+  const mask = document.getElementById("themeMask");
+  if (mask) mask.onclick = closeTheme;
+  const closeBtn = document.getElementById("themeCloseBtn");
+  if (closeBtn) closeBtn.onclick = closeTheme;
+})();
 </script>
 </body>
 </html>

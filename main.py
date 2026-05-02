@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse, JSO
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from llm_client import generate_stream, generate, vision_client, generate_followups
+from llm_client import generate_stream, generate, vision_client, generate_followups, resolve_intent_extra
 
 app = FastAPI(title="中药鉴定学 - 刘春生教授 AI 助教")
 
@@ -266,6 +266,7 @@ class ChatRequest(BaseModel):
     image: Optional[str] = None  # base64 data URL: "data:image/jpeg;base64,..."
     user_name: Optional[str] = None
     user_id: Optional[str] = None
+    intent: Optional[str] = None  # identify | concept | exam | compare
 
 
 @app.post("/api/chat")
@@ -290,12 +291,16 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
 
     # 日志里的 prompt 标记是否带图
     prompt_for_log = req.prompt + ("  [📷 含图片]" if req.image else "")
+    intent_extra = resolve_intent_extra(req.intent)
+    if req.intent and intent_extra:
+        prompt_for_log = f"[意图:{req.intent}] " + prompt_for_log
 
     if not req.stream:
         text = await generate(
             req.prompt, history=history_dicts,
             temperature=req.temperature, think=req.think,
             image_data=req.image, user_name=user_name,
+            extra_system=intent_extra,
         )
         text = strip_followup(text)
         log_chat(client_ip, user_agent, user_name, user_id, prompt_for_log, text, req.think, int((time.time() - started) * 1000))
@@ -309,6 +314,7 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
                 req.prompt, history=history_dicts,
                 temperature=req.temperature, think=req.think,
                 image_data=req.image, user_name=user_name,
+                extra_system=intent_extra,
             ):
                 full_answer += token
                 # 检查累计文本里是否已经出现了 💬 行的开头：一旦出现，停止往前端流

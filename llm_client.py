@@ -189,6 +189,48 @@ def build_system_prompt(user_name: str = "", extra: str = "") -> str:
 LIU_CHUNSHENG_SYSTEM_PROMPT = build_system_prompt()
 
 
+# ============ 意图分流（Intent Routing）============
+# 前端选择意图后，附加到 system prompt 末尾，强化该档输出风格
+INTENT_EXTRAS: Dict[str, str] = {
+    "identify": """
+
+【★本轮意图：药材鉴别★】
+- 学生当前需要"看图/性状鉴别"——一律走【问诊式四步：望→问→切→断】。
+- 第一轮只描述客观所见，绝不下结论；第二轮反问 1–3 个关键鉴别点后停下等回复。
+- 严禁直接铺鉴别要点全清单，那是复习材料不是鉴别现场。
+- 字数控制 150–300 字，问得精准即可。
+""",
+    "concept": """
+
+【★本轮意图：概念/总论★】
+- 学生当前需要"概念解释/术语定义/原理"——按概念档输出。
+- 一句定义 + 一两个药材举例佐证，不必七段框架。
+- 字数控制 80–150 字，重点用 **加粗**，干净利落不注水。
+""",
+    "exam": """
+
+【★本轮意图：考点/速记★】
+- 学生当前需要"考研/期末考点速记"——直击采分点。
+- 输出框架：药用部位 / 关键经验术语 / 道地产区 / 易混淆点 / 口诀（有则给）。
+- 字数控制 150–250 字，每条一句话，重点全部 **加粗** 方便扫读。
+""",
+    "compare": """
+
+【★本轮意图：易混品对比★】
+- 学生当前需要"两味药对比"——按对照式两段输出。
+- 第一段讲 A，第二段讲 B，每段标出"来源 / 性状关键差 / 经验术语"。
+- 末尾一句关键鉴别口诀收束（如"川贝怀中抱月，浙贝元宝双瓣"）。
+- 字数 200–350 字，差异点全部 **加粗**。
+""",
+}
+
+
+def resolve_intent_extra(intent: Optional[str]) -> str:
+    if not intent:
+        return ""
+    return INTENT_EXTRAS.get(intent.strip().lower(), "")
+
+
 async def generate_stream(
     user_prompt: str,
     system_prompt: Optional[str] = None,

@@ -540,6 +540,20 @@
 
   em, i, cite, dfn, address, var { font-style: normal; }
 
+  /* 意图分流芯片 */
+  .intent-chip {
+    background: #fff8e3; border: 1.5px solid #d4c89c;
+    color: #6b4a24; padding: 3px 10px; border-radius: 14px;
+    font-size: 12px; cursor: pointer; font-family: inherit;
+    letter-spacing: 0.5px; transition: all .15s;
+  }
+  .intent-chip:hover { background: #f5e6c4; }
+  .intent-chip.active {
+    background: linear-gradient(135deg, #5cc4a7, #3aa088);
+    color: #fff8e1; border-color: #3aa088;
+    box-shadow: 0 2px 4px rgba(58,143,122,.25);
+  }
+
   /* 窄屏：单列布局 + 侧栏可滚动展开 */
   @media (max-width: 768px) {
     .layout {
@@ -726,6 +740,15 @@
         今儿想聊哪味药，哪个知识点？您说话。
         <div id="dailyQuote" style="margin-top:18px;padding-top:14px;border-top:1px dashed #d4c8a0;font-size:12.5px;color:#8a6f3a;letter-spacing:1px;line-height:1.9;"></div>
       </div>
+    </div>
+
+    <div class="intent-bar" id="intentBar" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:6px 16px 0;font-size:12px;">
+      <span style="color:#8a6f3a;letter-spacing:1px;align-self:center;">意图：</span>
+      <button type="button" class="intent-chip" data-intent="">自动</button>
+      <button type="button" class="intent-chip" data-intent="identify">🔍 药材鉴别</button>
+      <button type="button" class="intent-chip" data-intent="concept">📖 概念总论</button>
+      <button type="button" class="intent-chip" data-intent="exam">📝 考点速记</button>
+      <button type="button" class="intent-chip" data-intent="compare">⚖️ 易混对比</button>
     </div>
 
     <div class="inputbar">
@@ -1215,6 +1238,25 @@ function renderSidebars() {
 
   const examBox = $("dailyExamBox");
   if (examBox) examBox.innerHTML = EXAM_GROUPS[examIdx];
+
+  // 意图分流芯片
+  const intentBar = document.getElementById("intentBar");
+  if (intentBar) {
+    window.__intent = localStorage.getItem("tcm_intent") || "";
+    const refreshIntent = () => {
+      intentBar.querySelectorAll(".intent-chip").forEach(b => {
+        b.classList.toggle("active", (b.dataset.intent || "") === (window.__intent || ""));
+      });
+    };
+    refreshIntent();
+    intentBar.addEventListener("click", e => {
+      const btn = e.target.closest(".intent-chip");
+      if (!btn) return;
+      window.__intent = btn.dataset.intent || "";
+      localStorage.setItem("tcm_intent", window.__intent);
+      refreshIntent();
+    });
+  }
 
   const rhymeBox = $("rhymeBox");
   if (rhymeBox) {
@@ -1725,6 +1767,7 @@ async function send() {
         prompt, history, stream: true, think: thinkMode, image,
         user_name: localStorage.getItem("tcm_user_name") || "",
         user_id: localStorage.getItem("tcm_user_id") || "",
+        intent: window.__intent || "",
       }),
     });
 

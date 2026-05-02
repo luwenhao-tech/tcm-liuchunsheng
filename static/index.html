@@ -92,7 +92,16 @@
     position: relative;
     box-shadow: inset 0 0 0 1px rgba(255,217,122,.35);
     transition: transform .15s;
+    white-space: nowrap;
+    overflow: hidden;
   }
+  .drawer > span { display: inline-block; max-width: 100%; }
+  .drawer[data-len="3"] { font-size: 11px; letter-spacing: 0.5px; }
+  .drawer[data-len="4"] { font-size: 10px; letter-spacing: 0; }
+  .drawer[data-len="5"] { font-size: 9px; letter-spacing: 0; }
+  .drawer[data-len="6"],
+  .drawer[data-len="7"],
+  .drawer[data-len="8"] { font-size: 8.5px; letter-spacing: 0; }
   .drawer:hover { transform: translateY(-1px); background: linear-gradient(180deg, #6dd0b4 0%, #4ab592 100%); }
   .drawer::after {
     content: ""; position: absolute;
@@ -671,7 +680,7 @@
 
     <!-- 药柜 -->
     <div class="panel">
-      <h3><span class="dot"></span>药柜·常考药材</h3>
+      <h3><span class="dot"></span>药柜</h3>
       <div class="drawers" id="drawerBox"></div>
     </div>
 
@@ -1199,7 +1208,7 @@ function renderSidebars() {
   const drawerBox = $("drawerBox");
   if (drawerBox) {
     drawerBox.innerHTML = DRAWER_GROUPS[drawerIdx].map(
-      ([name, q]) => `<div class="drawer" data-q="${q}">${name}</div>`
+      ([name, q]) => `<div class="drawer" data-q="${q}" data-len="${[...name].length}">${name}</div>`
     ).join("");
   }
 

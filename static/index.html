@@ -770,24 +770,28 @@
       <h3 style="color: var(--bucm-gold); border-bottom-color: rgba(212,168,56,0.4);">
         <span class="dot" style="background: var(--bucm-gold);"></span>杏林·岐黄
       </h3>
-      <div style="font-size: 12px; line-height: 1.9; color: #e8dcb4;">
-        "医者，意也。药者，瀹也。"<br/>
-        研岐黄，识百草，知寒热，辨阴阳。<br/>
-        一味药材，一段传承。
+      <div style="font-size: 12.5px; line-height: 1.95; color: #fff8e1; letter-spacing:.5px;">
+        <span style="color:#ffd97a;font-size:18px;">「</span><span style="color:#ffd97a;font-weight:700;">医者，意也</span>。<br/>
+        <span style="color:#ffd97a;font-weight:700;">药者，瀹也</span>。<span style="color:#ffd97a;font-size:18px;">」</span><br/>
+        <span style="display:block;margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,217,122,.4);font-size:11.5px;color:#e8dcb4;">
+        研岐黄 · 识百草<br/>知寒热 · 辨阴阳
+        </span>
+        <span style="display:block;text-align:right;font-size:10.5px;color:#ffd97a;margin-top:4px;letter-spacing:1px;">— 李时珍</span>
       </div>
     </div>
 
-    <!-- 四气五味 -->
+    <!-- 性味归经 -->
     <div class="panel">
-      <h3><span class="dot"></span>性味归经</h3>
+      <h3><span class="dot"></span>性味·归经</h3>
       <div class="quote" style="line-height:1.85;font-size:12.5px;">
-        四气：寒、热、温、凉<br/>
-        五味：辛、甘、酸、苦、咸<br/>
-        升降：升浮降沉，因势利导<br/>
-        归经：入十二经，引药归所<br/>
-        <span style="display:inline-block;margin-top:6px;padding-top:6px;border-top:1px dashed #d4c89c;color:#8b5a2b;font-size:11.5px;">
-        辛散甘缓，酸收苦泄咸软，<br/>性味为纲，配伍为用。
-        </span>
+        <span style="color:#a83224;font-weight:700;">☯ 四气</span>：<span style="color:#3a8f7a;">寒</span>·<span style="color:#a83224;">热</span>·<span style="color:#a83224;">温</span>·<span style="color:#3a8f7a;">凉</span><br/>
+        <span style="color:#a83224;font-weight:700;">✦ 五味</span>：<span style="color:#c9a13a;font-weight:700;">辛</span>散 <span style="color:#c9a13a;font-weight:700;">甘</span>缓 <span style="color:#c9a13a;font-weight:700;">酸</span>收 <span style="color:#c9a13a;font-weight:700;">苦</span>泄 <span style="color:#c9a13a;font-weight:700;">咸</span>软<br/>
+        <span style="color:#a83224;font-weight:700;">↑↓ 升降</span>：升浮主<span style="color:#3a8f7a;">阳</span>，降沉主<span style="color:#a83224;">阴</span><br/>
+        <span style="color:#a83224;font-weight:700;">⚯ 归经</span>：药有专司，引归所至
+        <div style="margin-top:8px;padding:8px 10px;background:#fdf6e3;border-left:3px solid #a83224;border-radius:0 4px 4px 0;font-size:11.5px;color:#6b4a24;line-height:1.7;font-style:italic;">
+          "药有<span style="color:#a83224;font-weight:700;">阴阳配合</span>，子母兄弟，<br/>根茎花实，草石骨肉。"<br/>
+          <span style="display:block;text-align:right;color:#8b5a2b;margin-top:2px;">—《神农本草经》</span>
+        </div>
       </div>
     </div>
 
@@ -1093,93 +1097,100 @@ const DRAWER_GROUPS = [
 ];
 
 const EXAM_GROUPS = [
-  // 第 1 组：解表药要点（7 条）
-  `麻黄「发汗解表」——平喘利水，量不可过；<br/>
-   桂枝「解肌温通」——温经助阳，调和营卫；<br/>
-   紫苏「解表理气」——兼能安胎止呕；<br/>
-   荆芥「轻扬透表」——炒炭止血；<br/>
-   防风「风药润剂」——祛风胜湿止痉；<br/>
-   柴胡「和解少阳」——疏肝升阳；<br/>
-   葛根「解肌透疹」——升津止泻。`,
-  // 第 2 组：清热药要点（7 条）
-  `石膏「辛甘大寒」——清气分大热，生用清热煅敛疮；<br/>
-   黄芩「清上焦」——肺火咽喉，安胎要药；<br/>
-   黄连「清中焦」——心胃实火，止泻第一；<br/>
-   黄柏「清下焦」——湿热黄疸，相火虚热；<br/>
-   金银花「清热解毒」——温病要药；<br/>
-   生地「凉血养阴」——热入营血、阴虚发热；<br/>
-   青蒿「清虚热」——疟疾要药，鲜品取汁。`,
-  // 第 3 组：补虚药要点（7 条）
-  `人参「大补元气」——救脱固虚，畏五灵脂；<br/>
-   黄芪「补气升阳」——固表利水，托毒生肌；<br/>
-   白术「补气健脾」——燥湿利水安胎；<br/>
-   当归「补血活血」——调经止痛润肠；<br/>
-   熟地「滋阴补血」——填精益髓；<br/>
-   阿胶「补血止血」——滋阴润燥；<br/>
-   甘草「调和诸药」——和中缓急解毒。`,
-  // 第 4 组：活血理气要点（7 条）
-  `川芎「血中气药」——上行头目，下调经水；<br/>
-   丹参「活血祛瘀」——一味丹参功同四物；<br/>
-   红花「活血通经」——少用养血，多用破血；<br/>
-   三七「化瘀止血」——伤科要药，能止能化；<br/>
-   延胡索「活血止痛」——气血皆治，醋制更佳；<br/>
-   陈皮「理气健脾」——燥湿化痰；<br/>
-   香附「气病总司」——疏肝调经。`,
-  // 第 5 组：经典方剂（7 首）
-  `桂枝汤——桂枝、芍药、甘草、生姜、大枣（解肌发表）；<br/>
-   银翘散——银花、连翘、薄荷、桔梗等（辛凉解表）；<br/>
-   四君子——人参、白术、茯苓、甘草（益气健脾）；<br/>
-   四物汤——熟地、当归、白芍、川芎（补血调经）；<br/>
-   六味地黄——熟地、山药、山萸、丹皮、泽泻、茯苓；<br/>
-   逍遥散——柴胡、当归、白芍、白术、茯苓等（疏肝健脾）；<br/>
-   小柴胡——柴胡、黄芩、半夏、人参、甘草、姜枣。`,
-  // 第 6 组：配伍禁忌（7 条）
-  `十八反「乌头反半夏瓜蒌贝母白蔹白及」；<br/>
-   十八反「甘草反甘遂大戟海藻芫花」；<br/>
-   十八反「藜芦反人参丹参玄参苦参细辛芍药」；<br/>
-   十九畏「硫黄畏朴硝」「水银畏砒霜」；<br/>
-   十九畏「狼毒畏密陀僧」「巴豆畏牵牛」；<br/>
-   妊娠禁用——巴豆、牵牛、大戟、麝香、三棱、莪术；<br/>
-   妊娠慎用——桃仁、红花、大黄、附子、干姜。`,
-  // 第 7 组：中药学高频考点（7 条）
-  `四气——寒热温凉，反映药性；<br/>
-   五味——辛散、甘缓、酸收、苦泄、咸软；<br/>
-   升降浮沉——病势顺逆，因势利导；<br/>
-   归经——药物对脏腑经络的选择性；<br/>
-   君臣佐使——主辅佐使，组方有序；<br/>
-   七情——单行、相须、相使、相畏、相杀、相恶、相反；<br/>
-   炮制目的——降毒、增效、便服、利贮。`,
+  // 第 1 组：解表箴言
+  `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">麻黄</strong> 发汗第一，<span style="color:#3a8f7a;">无汗能发，有汗能止</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">桂枝</strong> <span style="color:#3a8f7a;">解肌祖方</span>，温通调营卫；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">柴胡</strong> <span style="color:#3a8f7a;">少阳枢机</span>，疏肝升阳；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">葛根</strong> 升津止泻，<span style="color:#3a8f7a;">颈项强痛</span>专药；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">薄荷</strong> 轻可去实，疏风透疹。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"其在皮者，<span style="color:#a83224;font-weight:700;">汗而发之</span>。"—《素问·阴阳应象大论》</div>`,
+  // 第 2 组：清热箴言
+  `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">石膏</strong> 辛甘大寒，<span style="color:#3a8f7a;">气分大热</span>非此不解；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">黄连</strong> <span style="color:#3a8f7a;">治痢之圣</span>，泻火解毒；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">金银花</strong> <span style="color:#3a8f7a;">疮家圣药</span>，温病要药；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">生地</strong> 凉血养阴，<span style="color:#3a8f7a;">营血热证</span>必用；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">青蒿</strong> 截疟之神，鲜捣绞汁。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">热者寒之</span>，温者凉之。"—《素问·至真要大论》</div>`,
+  // 第 3 组：补虚箴言
+  `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">人参</strong> <span style="color:#3a8f7a;">大补元气</span>，救脱回阳；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">黄芪</strong> 补气升阳，<span style="color:#3a8f7a;">疮家圣药</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">当归</strong> <span style="color:#3a8f7a;">血中圣药</span>，补血兼活血；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">熟地</strong> 大补真阴，填精益髓；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">甘草</strong> <span style="color:#3a8f7a;">国老</span>，调和诸药解百毒。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">虚则补之</span>，实则泻之。"—《素问·三部九候论》</div>`,
+  // 第 4 组：活血箴言
+  `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">川芎</strong> <span style="color:#3a8f7a;">血中气药</span>，上行头目；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">丹参</strong> 一味，<span style="color:#3a8f7a;">功同四物</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">红花</strong> 少养多破，桃红四物之要；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">三七</strong> <span style="color:#3a8f7a;">伤科圣药</span>，能止能化；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">延胡索</strong> 行血中气滞，气中血滞。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">通则不痛</span>，痛则不通。"—《医学心悟》</div>`,
+  // 第 5 组：方剂箴言
+  `<span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">桂枝汤</strong> <span style="color:#3a8f7a;">群方之祖</span>，调和营卫；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">银翘散</strong> 辛凉平剂，温病初起；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">四君子</strong> <span style="color:#3a8f7a;">补气基础</span>，参苓术草；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">四物汤</strong> 补血调经，地芍归芎；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">六味地黄</strong> <span style="color:#3a8f7a;">三补三泻</span>，滋阴祖方。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"善学者尽其理，<span style="color:#a83224;font-weight:700;">善行者究其难</span>。"—《荀子》</div>`,
+  // 第 6 组：配伍箴言
+  `<span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">十八反</strong>：乌头反<span style="color:#3a8f7a;">半瓜贝蔹及</span>；<br/>
+   <span style="color:#c9a13a;">⚠</span> 甘草反<span style="color:#3a8f7a;">甘遂大戟海藻芫花</span>；<br/>
+   <span style="color:#c9a13a;">⚠</span> 藜芦反<span style="color:#3a8f7a;">诸参辛芍</span>；<br/>
+   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">妊娠禁用</strong>：巴豆、牵牛、大戟、麝香；<br/>
+   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">妊娠慎用</strong>：桃红、大黄、附子、干姜。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">用药如用兵</span>，知医如知将。"—徐灵胎</div>`,
+  // 第 7 组：总论箴言
+  `<span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">四气</strong>：寒热温凉，<span style="color:#3a8f7a;">反映药性</span>；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">五味</strong>：辛散甘缓，酸收苦泄咸软；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">升降浮沉</strong>：<span style="color:#3a8f7a;">因势利导</span>；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">归经</strong>：药有专司，引归所至；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">君臣佐使</strong>：主辅佐使，组方有序。
+   <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">医者意也</span>，药者瀹也。"—李时珍</div>`,
 ];
 
 const RHYME_GROUPS = [
-  // 第 1 组：解表药功效歌
-  [["麻黄","发汗平喘利水"],["桂枝","解肌温通助阳"],["紫苏","解表理气安胎"],
-   ["生姜","发表温中止呕"],["荆芥","祛风透疹炒炭止血"],["防风","祛风胜湿止痉"],
-   ["柴胡","和解少阳疏肝升阳"],["薄荷","疏风清热利咽透疹"],["葛根","解肌透疹升津"]],
-  // 第 2 组：清热药功效歌
-  [["石膏","清热泻火除烦止渴"],["知母","清热泻火滋阴润燥"],["黄芩","清上焦湿热安胎"],
-   ["黄连","清心胃止泻除烦"],["黄柏","清下焦湿热退虚热"],["金银花","清热解毒疏散风热"],
-   ["连翘","清热解毒消肿散结"],["生地","清热凉血养阴生津"],["丹皮","清热凉血活血散瘀"]],
-  // 第 3 组：补虚药功效歌
-  [["人参","大补元气生津安神"],["党参","补中益气和胃生津"],["黄芪","补气升阳固表托毒"],
-   ["白术","补气健脾燥湿安胎"],["甘草","补脾益气调和诸药"],["当归","补血活血调经止痛"],
-   ["熟地","滋阴补血益精填髓"],["阿胶","补血滋阴润燥止血"],["枸杞","滋补肝肾益精明目"]],
-  // 第 4 组：活血理气功效歌
-  [["川芎","活血行气祛风止痛"],["丹参","活血祛瘀凉血消痈"],["红花","活血通经祛瘀止痛"],
-   ["桃仁","活血祛瘀润肠通便"],["三七","化瘀止血消肿定痛"],["延胡索","活血行气止痛"],
-   ["陈皮","理气健脾燥湿化痰"],["枳实","破气消积化痰除痞"],["香附","疏肝解郁调经止痛"]],
-  // 第 5 组：化痰止咳功效歌
-  [["半夏","燥湿化痰降逆止呕"],["天南星","燥湿化痰祛风止痉"],["桔梗","宣肺祛痰利咽排脓"],
-   ["瓜蒌","清热化痰宽胸散结"],["川贝母","清热化痰润肺止咳"],["浙贝母","清热化痰开郁散结"],
-   ["杏仁","止咳平喘润肠通便"],["紫菀","润肺化痰止咳"],["枇杷叶","清肺止咳降逆止呕"]],
-  // 第 6 组：经典方剂歌
-  [["桂枝汤","解肌发表调和营卫"],["麻黄汤","发汗解表宣肺平喘"],["银翘散","辛凉透表清热解毒"],
-   ["白虎汤","清热泻火除烦生津"],["四君子","益气健脾治脾虚"],["四物汤","补血调血治血虚"],
-   ["六味地黄","滋阴补肾治阴虚"],["逍遥散","疏肝健脾养血调经"],["小柴胡","和解少阳治半表半里"]],
-  // 第 7 组：中药学总则
-  [["四气","寒热温凉"],["五味","辛甘酸苦咸"],["升降浮沉","因势利导"],
-   ["归经","入脏腑经络"],["君臣佐使","主辅佐使"],["七情","须使畏杀恶反"],
-   ["十八反","乌头反半瓜贝蔹及"],["妊娠禁用","巴豆牵牛大戟麝香"],["炮制四要","降毒增效便服利贮"]],
+  // 第 1 组：解表名句
+  [["麻黄","『发汗第一』，无汗能发，有汗能止"],["桂枝","『解肌祖方』，温通血脉走四肢"],
+   ["生姜","『呕家圣药』，止呕之要"],["柴胡","『少阳枢机』，疏肝解郁第一"],
+   ["薄荷","『轻可去实』，疏风透疹清头目"],["葛根","『升津止泻』，颈项强痛专药"],
+   ["防风","『风药润剂』，祛风不燥"],["荆芥","『血中风药』，炒炭止血"],
+   ["细辛","『不过钱』，散寒通窍止痛"]],
+  // 第 2 组：清热名句
+  [["石膏","『清热泻火』，气分大热非此不解"],["黄连","『泻火解毒』，治痢之圣药"],
+   ["黄芩","『安胎圣药』，清上焦肺火"],["黄柏","『退虚热』，知柏地黄之要"],
+   ["金银花","『疮家圣药』，温病第一对药"],["生地","『凉血养阴』，热入营血必用"],
+   ["丹皮","『凉血退蒸』，无汗骨蒸专攻"],["青蒿","『截疟之神』，鲜捣绞汁"],
+   ["栀子","『屈曲下行』，清三焦火"]],
+  // 第 3 组：补虚名句
+  [["人参","『大补元气』，救脱回阳第一"],["黄芪","『补气升阳』，疮家圣药"],
+   ["白术","『脾脏补气健脾第一要药』"],["甘草","『国老』，调和诸药解百毒"],
+   ["当归","『血中圣药』，补血活血兼调经"],["熟地","『补血填精』，大补真阴"],
+   ["阿胶","『补血止血』，滋阴润燥兼之"],["枸杞","『益精明目』，平补肝肾"],
+   ["鹿茸","『血肉有情』，温肾壮阳第一"]],
+  // 第 4 组：活血理气名句
+  [["川芎","『血中气药』，上行头目下调经"],["丹参","『一味丹参，功同四物』"],
+   ["红花","『少则养血，多则破血』"],["三七","『血证之圣药』，能止能化"],
+   ["延胡索","『行血中气滞，气中血滞』"],["陈皮","『理气健脾』，二陈之君"],
+   ["香附","『气病之总司，女科之主帅』"],["木香","『行气止痛第一』"],
+   ["枳实","『破气消积』，胸痹结胸要药"]],
+  // 第 5 组：化痰安神名句
+  [["半夏","『燥湿化痰』，呕家无此不安"],["天南星","『治风痰之要药』"],
+   ["桔梗","『舟楫之剂』，载药上行"],["瓜蒌","『宽胸散结』，胸痹之主药"],
+   ["川贝","『润肺止咳』，虚劳咳嗽专用"],["杏仁","『止咳平喘』，肺家要药"],
+   ["酸枣仁","『养心安神』，虚烦不眠"],["远志","『安神益智』，交通心肾"],
+   ["朱砂","『重镇安神』，治惊痫第一"]],
+  // 第 6 组：方剂名句
+  [["桂枝汤","『群方之祖』，调和营卫"],["麻黄汤","『发汗峻剂』，伤寒表实"],
+   ["银翘散","『辛凉平剂』，温病初起"],["四君子","『补气基础方』，治脾虚"],
+   ["四物汤","『补血调经第一方』"],["六味地黄","『滋阴祖方』，三补三泻"],
+   ["逍遥散","『疏肝解郁』，妇人调经"],["小柴胡","『和解少阳』，往来寒热"],
+   ["补中益气","『甘温除热』，劳倦伤脾"]],
+  // 第 7 组：医家箴言
+  [["神农","『药有阴阳，子母兄弟』"],["岐伯","『治病必求于本』"],
+   ["仲景","『勤求古训，博采众方』"],["孙思邈","『大医精诚，博极医源』"],
+   ["李时珍","『药者，瀹也』"],["张景岳","『善补阳者必于阴中求阳』"],
+   ["叶天士","『温邪上受，首先犯肺』"],["王清任","『治病之要诀，在明白气血』"],
+   ["徐灵胎","『用药如用兵，知医如知将』"]],
 ];
 
 /* ============ 每日金句（按日期切，循环若干句）============ */
@@ -1224,7 +1235,7 @@ function renderSidebars() {
   const rhymeBox = $("rhymeBox");
   if (rhymeBox) {
     rhymeBox.innerHTML = RHYME_GROUPS[rhymeIdx].map(
-      ([name, txt]) => `<strong style="color:#a83224;">${name}</strong>：${txt}<br/>`
+      ([name, txt]) => `<span style="color:#c9a13a;">❖</span> <strong style="color:#a83224;">${name}</strong> ${txt}<br/>`
     ).join("");
   }
 

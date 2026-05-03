@@ -99,7 +99,9 @@
     position: relative;
     box-shadow: inset 0 0 0 1px rgba(255,217,122,.35);
     transition: transform .15s;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .drawer > span { display: inline-block; max-width: 100%; }
   .drawer[data-len="3"],
@@ -124,6 +126,9 @@
     font-size: 13px; line-height: 1.9;
     color: #5a3a14;
     padding: 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .quote .mark { color: #a83224; font-size: 18px; font-weight: 700; }
 
@@ -139,7 +144,9 @@
     text-align: center;
     display: flex; align-items: center; justify-content: center;
     min-height: 26px;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .tag:hover { background: #ecd49a; }
   .tag.green { background: #e8eed7; border-color: #7a9461; color: #2f5233; }

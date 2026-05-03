@@ -654,8 +654,6 @@
 </style>
 </head>
 <body>
-<button id="themeToggle" class="theme-toggle" title="切换日间/夜间模式">🌙</button>
-
 <!-- ============ 登录页 ============ -->
 <div id="loginMask" style="position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,#3a8f7a 0%,#4ea693 50%,#2d6b5c 100%);display:flex;align-items:center;justify-content:center;">
   <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%, rgba(242,204,107,.15) 0%, transparent 40%),radial-gradient(circle at 80% 70%, rgba(255,248,227,.12) 0%, transparent 40%);pointer-events:none;"></div>
@@ -940,22 +938,14 @@
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");
 
-/* ============ 主题：日间/夜间，状态存 localStorage ============ */
-(function initTheme() {
-  const saved = localStorage.getItem("tcm_theme");
-  if (saved === "dark") document.documentElement.classList.add("dark");
+/* ============ 旧版日夜模式键名清理（与新主题色冲突，统一移除） ============ */
+(function purgeOldDarkMode() {
+  const v = localStorage.getItem("tcm_theme");
+  if (v === "dark" || v === "light") {
+    localStorage.removeItem("tcm_theme");
+  }
+  document.documentElement.classList.remove("dark");
 })();
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = $("themeToggle");
-  if (!btn) return;
-  const sync = () => btn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
-  sync();
-  btn.addEventListener("click", () => {
-    document.documentElement.classList.toggle("dark");
-    localStorage.setItem("tcm_theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
-    sync();
-  });
-});
 
 /* ============ 自动清理：旧版用户的 localStorage 残留 ============ */
 /* 老用户曾经只填姓名就进了，他们 localStorage 里有 tcm_user_name 但没 tcm_token，

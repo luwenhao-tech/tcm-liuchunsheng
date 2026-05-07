@@ -797,20 +797,7 @@
     <!-- 关键词 -->
     <div class="panel" style="padding:6px 10px;">
       <h3 style="margin-bottom:6px;"><span class="dot"></span>本草·玄机</h3>
-      <div class="tags">
-        <span class="tag red" data-q="什么是君臣佐使？">君臣佐使</span>
-        <span class="tag" data-q="什么叫七情和合？">七情和合</span>
-        <span class="tag green" data-q="什么叫引经报使？">引经报使</span>
-        <span class="tag" data-q="升降浮沉是什么？">升降浮沉</span>
-        <span class="tag red" data-q="寒热补泻怎么理解？">寒热补泻</span>
-        <span class="tag green" data-q="相反相畏指什么？">相反相畏</span>
-        <span class="tag red" data-q="同病异治的含义">同病异治</span>
-        <span class="tag" data-q="异病同治的含义">异病同治</span>
-        <span class="tag green" data-q="三因制宜是什么？">三因制宜</span>
-        <span class="tag" data-q="上工治未病出处与含义">治未病</span>
-        <span class="tag red" data-q="标本缓急怎么辨？">标本缓急</span>
-        <span class="tag" data-q="讲讲大医精诚">大医精诚</span>
-      </div>
+      <div class="tags" id="tagsBox"></div>
     </div>
 
   </aside>
@@ -1145,6 +1132,45 @@ const EXAM_GROUPS = [
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">医者意也</span>，药者瀹也。"—李时珍</div>`,
 ];
 
+/* ============ 本草·玄机 关键词标签（每 10 分钟换一组）============ */
+const TAG_GROUPS = [
+  // 第 1 组：总论概念
+  [["red","什么是君臣佐使？","君臣佐使"],["","什么叫七情和合？","七情和合"],["green","什么叫引经报使？","引经报使"],
+   ["","升降浮沉是什么？","升降浮沉"],["red","寒热补泻怎么理解？","寒热补泻"],["green","相反相畏指什么？","相反相畏"],
+   ["red","同病异治的含义","同病异治"],["","异病同治的含义","异病同治"],["green","三因制宜是什么？","三因制宜"],
+   ["","上工治未病出处与含义","治未病"],["red","标本缓急怎么辨？","标本缓急"],["","讲讲大医精诚","大医精诚"]],
+  // 第 2 组：解表清热
+  [["red","麻黄的功效与主治","麻 黄"],["","桂枝的功效","桂 枝"],["green","柴胡的功效","柴 胡"],
+   ["","葛根的功效","葛 根"],["red","薄荷的功效","薄 荷"],["green","菊花的功效","菊 花"],
+   ["red","石膏的功效","石 膏"],["","黄连的功效","黄 连"],["green","金银花的功效","金银花"],
+   ["","连翘的功效","连 翘"],["red","知母的功效","知 母"],["","青蒿的功效","青 蒿"]],
+  // 第 3 组：补虚养血
+  [["red","人参的功效与配伍","人 参"],["","黄芪的功效","黄 芪"],["green","党参的功效","党 参"],
+   ["","白术的功效","白 术"],["red","当归的功效","当 归"],["green","熟地黄的功效","熟 地"],
+   ["red","阿胶的功效","阿 胶"],["","枸杞子的功效","枸杞子"],["green","麦冬的功效","麦 冬"],
+   ["","山药的功效","山 药"],["red","甘草的功效与配伍","甘 草"],["","白芍的功效","白 芍"]],
+  // 第 4 组：活血理气
+  [["red","川芎的功效","川 芎"],["","丹参的功效","丹 参"],["green","红花的功效","红 花"],
+   ["","桃仁的功效","桃 仁"],["red","三七的功效","三 七"],["green","延胡索的功效","延胡索"],
+   ["red","益母草的功效","益母草"],["","牛膝的功效","牛 膝"],["green","郁金的功效","郁 金"],
+   ["","陈皮的功效","陈 皮"],["red","香附的功效","香 附"],["","木香的功效","木 香"]],
+  // 第 5 组：化痰止咳安神
+  [["red","半夏的功效","半 夏"],["","桔梗的功效","桔 梗"],["green","瓜蒌的功效","瓜 蒌"],
+   ["","川贝母的功效","川贝母"],["red","浙贝母的功效","浙贝母"],["green","苦杏仁的功效","杏 仁"],
+   ["red","紫菀的功效","紫 菀"],["","枇杷叶的功效","枇杷叶"],["green","酸枣仁的功效","酸枣仁"],
+   ["","远志的功效","远 志"],["red","龙骨的功效","龙 骨"],["","天南星的功效","天南星"]],
+  // 第 6 组：经典方剂
+  [["red","桂枝汤的组成与主治","桂枝汤"],["","麻黄汤的组成","麻黄汤"],["green","银翘散的组成","银翘散"],
+   ["","白虎汤的组成","白虎汤"],["red","小柴胡汤的组成","小柴胡"],["green","四君子汤的组成","四君子"],
+   ["red","四物汤的组成与功效","四物汤"],["","六味地黄丸的组成","六味地黄"],["green","逍遥散的组成","逍遥散"],
+   ["","补中益气汤的组成","补中益气"],["red","二陈汤的组成","二陈汤"],["","大承气汤的组成","大承气"]],
+  // 第 7 组：考点高频
+  [["red","君臣佐使的含义","君臣佐使"],["","七情配伍是什么？","七 情"],["green","十八反包括哪些？","十八反"],
+   ["","十九畏包括哪些？","十九畏"],["red","四气的含义与意义","四 气"],["green","五味的功效特点","五 味"],
+   ["red","升降浮沉的含义","升降浮沉"],["","归经的含义","归 经"],["green","毒性中药的使用注意","毒 性"],
+   ["","妊娠禁忌药有哪些？","妊娠禁忌"],["red","炮制的目的与方法","炮 制"],["","蜜炙的目的","蜜 炙"]],
+];
+
 const RHYME_GROUPS = [
   // 第 1 组：解表名句
   [["麻黄","『发汗第一』，无汗能发，有汗能止"],["桂枝","『解肌祖方』，温通血脉走四肢"],
@@ -1220,11 +1246,18 @@ function dayIndex() {
   return Math.floor(epoch / 86400000);
 }
 
+/* 10 分钟槽位下标：每 10 分钟 +1，用于轮换右侧/左侧除"校训、杏林·岐黄"外的所有面板 */
+function slotIndex() {
+  return Math.floor(Date.now() / (10 * 60 * 1000));
+}
+
 function renderSidebars() {
   const day = dayIndex();
-  const drawerIdx = day % DRAWER_GROUPS.length;
-  const examIdx   = day % EXAM_GROUPS.length;
-  const rhymeIdx  = day % RHYME_GROUPS.length;
+  const slot = slotIndex();
+  const drawerIdx = slot % DRAWER_GROUPS.length;
+  const examIdx   = slot % EXAM_GROUPS.length;
+  const rhymeIdx  = slot % RHYME_GROUPS.length;
+  const tagIdx    = slot % TAG_GROUPS.length;
 
   const drawerBox = $("drawerBox");
   if (drawerBox) {
@@ -1243,6 +1276,13 @@ function renderSidebars() {
     ).join("");
   }
 
+  const tagsBox = $("tagsBox");
+  if (tagsBox) {
+    tagsBox.innerHTML = TAG_GROUPS[tagIdx].map(
+      ([cls, q, label]) => `<span class="tag${cls?' '+cls:''}" data-q="${q}">${label}</span>`
+    ).join("");
+  }
+
   // 每日金句注入欢迎页
   const quoteBox = $("dailyQuote");
   if (quoteBox) {
@@ -1252,10 +1292,10 @@ function renderSidebars() {
   // 注意：药柜点击交给全局 [data-q] 事件委托处理，无需重复绑定
 }
 
-// 首屏渲染 + 每小时检查一次（跨日自动换内容）
+// 首屏渲染 + 每分钟检查（10 分钟到点自动换内容；幂等）
 document.addEventListener("DOMContentLoaded", () => {
   renderSidebars();
-  setInterval(renderSidebars, 60 * 60 * 1000);
+  setInterval(renderSidebars, 60 * 1000);
 });
 
 let history = [];

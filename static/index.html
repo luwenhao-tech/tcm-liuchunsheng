@@ -49,7 +49,6 @@
     min-height: 0;
     overflow: visible;
   }
-  .side > .panel:last-child { margin-top: auto; }
   .side .panel { overflow: hidden; }
   .side .panel .quote,
   .side .panel .tags { overflow: hidden; }
@@ -1092,7 +1091,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">柴胡</strong> <span style="color:#3a8f7a;">少阳枢机</span>，疏肝升阳；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">葛根</strong> 升津止泻，<span style="color:#3a8f7a;">颈项强痛</span>专药；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">薄荷</strong> 轻可去实，疏风透疹；<br/>
-   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">细辛</strong> <span style="color:#3a8f7a;">不过钱</span>，散寒通窍止痛。
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">细辛</strong> <span style="color:#3a8f7a;">不过钱</span>，散寒通窍止痛；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">紫苏</strong> 解表行气，<span style="color:#3a8f7a;">和胃安胎</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">防风</strong> <span style="color:#3a8f7a;">风药润剂</span>，祛风不燥；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">白芷</strong> 阳明头痛，<span style="color:#3a8f7a;">通鼻排脓</span>。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"其在皮者，<span style="color:#a83224;font-weight:700;">汗而发之</span>。"—《素问·阴阳应象大论》</div>`,
   // 第 2 组：清热箴言
   `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">石膏</strong> 辛甘大寒，<span style="color:#3a8f7a;">气分大热</span>非此不解；<br/>
@@ -1100,7 +1102,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">金银花</strong> <span style="color:#3a8f7a;">疮家圣药</span>，温病要药；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">生地</strong> 凉血养阴，<span style="color:#3a8f7a;">营血热证</span>必用；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">青蒿</strong> 截疟之神，鲜捣绞汁；<br/>
-   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">栀子</strong> <span style="color:#3a8f7a;">屈曲下行</span>，清三焦火。
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">栀子</strong> <span style="color:#3a8f7a;">屈曲下行</span>，清三焦火；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">黄芩</strong> <span style="color:#3a8f7a;">安胎圣药</span>，清上焦肺火；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">连翘</strong> <span style="color:#3a8f7a;">疮家圣药</span>，清心散结；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">知母</strong> 清热泻火，<span style="color:#3a8f7a;">滋阴润燥</span>。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">热者寒之</span>，温者凉之。"—《素问·至真要大论》</div>`,
   // 第 3 组：补虚箴言
   `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">人参</strong> <span style="color:#3a8f7a;">大补元气</span>，救脱回阳；<br/>
@@ -1108,7 +1113,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">当归</strong> <span style="color:#3a8f7a;">血中圣药</span>，补血兼活血；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">熟地</strong> 大补真阴，填精益髓；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">甘草</strong> <span style="color:#3a8f7a;">国老</span>，调和诸药解百毒；<br/>
-   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">枸杞</strong> 益精明目，<span style="color:#3a8f7a;">平补肝肾</span>。
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">枸杞</strong> 益精明目，<span style="color:#3a8f7a;">平补肝肾</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">白术</strong> <span style="color:#3a8f7a;">补脾第一</span>，燥湿利水；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">麦冬</strong> 润肺养阴，<span style="color:#3a8f7a;">益胃生津</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">阿胶</strong> 补血止血，<span style="color:#3a8f7a;">滋阴润燥</span>。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">虚则补之</span>，实则泻之。"—《素问·三部九候论》</div>`,
   // 第 4 组：活血箴言
   `<span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">川芎</strong> <span style="color:#3a8f7a;">血中气药</span>，上行头目；<br/>
@@ -1116,7 +1124,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">红花</strong> 少养多破，桃红四物之要；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">三七</strong> <span style="color:#3a8f7a;">伤科圣药</span>，能止能化；<br/>
    <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">延胡索</strong> 行血中气滞，气中血滞；<br/>
-   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">桃仁</strong> <span style="color:#3a8f7a;">破血祛瘀</span>，润肠通便。
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">桃仁</strong> <span style="color:#3a8f7a;">破血祛瘀</span>，润肠通便；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">益母草</strong> 活血调经，<span style="color:#3a8f7a;">妇科要药</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">郁金</strong> 行气解郁，<span style="color:#3a8f7a;">凉血破瘀</span>；<br/>
+   <span style="color:#c9a13a;">⛩</span> <strong style="color:#a83224;">牛膝</strong> 引血下行，<span style="color:#3a8f7a;">补肝肾强筋骨</span>。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">通则不痛</span>，痛则不通。"—《医学心悟》</div>`,
   // 第 5 组：方剂箴言
   `<span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">桂枝汤</strong> <span style="color:#3a8f7a;">群方之祖</span>，调和营卫；<br/>
@@ -1124,7 +1135,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">四君子</strong> <span style="color:#3a8f7a;">补气基础</span>，参苓术草；<br/>
    <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">四物汤</strong> 补血调经，地芍归芎；<br/>
    <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">六味地黄</strong> <span style="color:#3a8f7a;">三补三泻</span>，滋阴祖方；<br/>
-   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">逍遥散</strong> 疏肝健脾，<span style="color:#3a8f7a;">妇人调经</span>之要。
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">逍遥散</strong> 疏肝健脾，<span style="color:#3a8f7a;">妇人调经</span>之要；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">小柴胡</strong> 和解少阳，<span style="color:#3a8f7a;">往来寒热</span>；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">补中益气</strong> <span style="color:#3a8f7a;">甘温除热</span>，劳倦伤脾；<br/>
+   <span style="color:#c9a13a;">❀</span> <strong style="color:#a83224;">二陈汤</strong> 燥湿化痰，<span style="color:#3a8f7a;">痰证通用</span>。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"善学者尽其理，<span style="color:#a83224;font-weight:700;">善行者究其难</span>。"—《荀子》</div>`,
   // 第 6 组：配伍箴言
   `<span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">十八反</strong>：乌头反<span style="color:#3a8f7a;">半瓜贝蔹及</span>；<br/>
@@ -1132,7 +1146,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">⚠</span> 藜芦反<span style="color:#3a8f7a;">诸参辛芍</span>；<br/>
    <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">妊娠禁用</strong>：巴豆、牵牛、大戟、麝香；<br/>
    <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">妊娠慎用</strong>：桃红、大黄、附子、干姜；<br/>
-   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">十九畏</strong>：硫黄畏朴硝，水银畏砒霜。
+   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">十九畏</strong>：硫黄畏朴硝，水银畏砒霜；<br/>
+   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">人参</strong>畏<span style="color:#3a8f7a;">五灵脂</span>，丁香畏郁金；<br/>
+   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">川乌、草乌</strong>畏<span style="color:#3a8f7a;">犀角</span>；<br/>
+   <span style="color:#c9a13a;">⚠</span> <strong style="color:#a83224;">官桂</strong>畏<span style="color:#3a8f7a;">石脂</span>，牙硝畏三棱。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">用药如用兵</span>，知医如知将。"—徐灵胎</div>`,
   // 第 7 组：总论箴言
   `<span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">四气</strong>：寒热温凉，<span style="color:#3a8f7a;">反映药性</span>；<br/>
@@ -1140,7 +1157,10 @@ const EXAM_GROUPS = [
    <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">升降浮沉</strong>：<span style="color:#3a8f7a;">因势利导</span>；<br/>
    <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">归经</strong>：药有专司，引归所至；<br/>
    <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">君臣佐使</strong>：主辅佐使，组方有序；<br/>
-   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">七情</strong>：<span style="color:#3a8f7a;">须使畏杀恶反</span>。
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">七情</strong>：<span style="color:#3a8f7a;">须使畏杀恶反</span>；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">毒性</strong>：有大毒、有常毒，<span style="color:#3a8f7a;">中病即止</span>；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">炮制</strong>：<span style="color:#3a8f7a;">减毒增效</span>，便于贮存；<br/>
+   <span style="color:#c9a13a;">☯</span> <strong style="color:#a83224;">配伍</strong>：因证组方，<span style="color:#3a8f7a;">随证加减</span>。
    <div style="margin-top:8px;padding:6px 10px;background:#fdf6e3;border-left:3px solid #a83224;font-size:11px;color:#6b4a24;font-style:italic;">"<span style="color:#a83224;font-weight:700;">医者意也</span>，药者瀹也。"—李时珍</div>`,
 ];
 
@@ -1150,43 +1170,50 @@ const RHYME_GROUPS = [
    ["生姜","『呕家圣药』，止呕之要"],["柴胡","『少阳枢机』，疏肝解郁第一"],
    ["薄荷","『轻可去实』，疏风透疹清头目"],["葛根","『升津止泻』，颈项强痛专药"],
    ["防风","『风药润剂』，祛风不燥"],["荆芥","『血中风药』，炒炭止血"],
-   ["细辛","『不过钱』，散寒通窍止痛"]],
+   ["细辛","『不过钱』，散寒通窍止痛"],["紫苏","『解表散寒』，行气和胃安胎"],
+   ["白芷","『祛风止痛』，阳明头痛专药"],["菊花","『疏风清热』，平肝明目"]],
   // 第 2 组：清热名句
   [["石膏","『清热泻火』，气分大热非此不解"],["黄连","『泻火解毒』，治痢之圣药"],
    ["黄芩","『安胎圣药』，清上焦肺火"],["黄柏","『退虚热』，知柏地黄之要"],
    ["金银花","『疮家圣药』，温病第一对药"],["生地","『凉血养阴』，热入营血必用"],
    ["丹皮","『凉血退蒸』，无汗骨蒸专攻"],["青蒿","『截疟之神』，鲜捣绞汁"],
-   ["栀子","『屈曲下行』，清三焦火"]],
+   ["栀子","『屈曲下行』，清三焦火"],["连翘","『疮家圣药』，清心解毒"],
+   ["蒲公英","『乳痈要药』，清热消肿"],["知母","『清热泻火』，滋阴润燥"]],
   // 第 3 组：补虚名句
   [["人参","『大补元气』，救脱回阳第一"],["黄芪","『补气升阳』，疮家圣药"],
    ["白术","『脾脏补气健脾第一要药』"],["甘草","『国老』，调和诸药解百毒"],
    ["当归","『血中圣药』，补血活血兼调经"],["熟地","『补血填精』，大补真阴"],
    ["阿胶","『补血止血』，滋阴润燥兼之"],["枸杞","『益精明目』，平补肝肾"],
-   ["鹿茸","『血肉有情』，温肾壮阳第一"]],
+   ["鹿茸","『血肉有情』，温肾壮阳第一"],["党参","『补中益气』，平补脾肺"],
+   ["山药","『补脾养胃』，平补三焦"],["麦冬","『润肺养阴』，益胃生津"]],
   // 第 4 组：活血理气名句
   [["川芎","『血中气药』，上行头目下调经"],["丹参","『一味丹参，功同四物』"],
    ["红花","『少则养血，多则破血』"],["三七","『血证之圣药』，能止能化"],
    ["延胡索","『行血中气滞，气中血滞』"],["陈皮","『理气健脾』，二陈之君"],
    ["香附","『气病之总司，女科之主帅』"],["木香","『行气止痛第一』"],
-   ["枳实","『破气消积』，胸痹结胸要药"]],
+   ["枳实","『破气消积』，胸痹结胸要药"],["桃仁","『破血祛瘀』，润肠通便"],
+   ["益母草","『活血调经』，妇科要药"],["郁金","『行气解郁』，凉血破瘀"]],
   // 第 5 组：化痰安神名句
   [["半夏","『燥湿化痰』，呕家无此不安"],["天南星","『治风痰之要药』"],
    ["桔梗","『舟楫之剂』，载药上行"],["瓜蒌","『宽胸散结』，胸痹之主药"],
    ["川贝","『润肺止咳』，虚劳咳嗽专用"],["杏仁","『止咳平喘』，肺家要药"],
    ["酸枣仁","『养心安神』，虚烦不眠"],["远志","『安神益智』，交通心肾"],
-   ["朱砂","『重镇安神』，治惊痫第一"]],
+   ["朱砂","『重镇安神』，治惊痫第一"],["浙贝","『清热化痰』，外感咳嗽宜之"],
+   ["枇杷叶","『清肺止咳』，降逆止呕"],["龙骨","『重镇安神』，平肝潜阳"]],
   // 第 6 组：方剂名句
   [["桂枝汤","『群方之祖』，调和营卫"],["麻黄汤","『发汗峻剂』，伤寒表实"],
    ["银翘散","『辛凉平剂』，温病初起"],["四君子","『补气基础方』，治脾虚"],
    ["四物汤","『补血调经第一方』"],["六味地黄","『滋阴祖方』，三补三泻"],
    ["逍遥散","『疏肝解郁』，妇人调经"],["小柴胡","『和解少阳』，往来寒热"],
-   ["补中益气","『甘温除热』，劳倦伤脾"]],
+   ["补中益气","『甘温除热』，劳倦伤脾"],["白虎汤","『清气分热』，四大证之主方"],
+   ["二陈汤","『燥湿化痰』，痰证通用方"],["大承气","『峻下热结』，阳明腑实"]],
   // 第 7 组：医家箴言
   [["神农","『药有阴阳，子母兄弟』"],["岐伯","『治病必求于本』"],
    ["仲景","『勤求古训，博采众方』"],["孙思邈","『大医精诚，博极医源』"],
    ["李时珍","『药者，瀹也』"],["张景岳","『善补阳者必于阴中求阳』"],
    ["叶天士","『温邪上受，首先犯肺』"],["王清任","『治病之要诀，在明白气血』"],
-   ["徐灵胎","『用药如用兵，知医如知将』"]],
+   ["徐灵胎","『用药如用兵，知医如知将』"],["朱丹溪","『阳常有余，阴常不足』"],
+   ["李东垣","『内伤脾胃，百病由生』"],["刘完素","『六气皆从火化』"]],
 ];
 
 /* ============ 每日金句（按日期切，循环若干句）============ */

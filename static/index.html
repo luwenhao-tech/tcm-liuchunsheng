@@ -196,6 +196,7 @@
   .main {
     display: flex; flex-direction: column;
     min-height: 0;
+    position: relative;
   }
 
   /* 顶栏：北京中医药大学深青绿主色 + 金色勾边 */
@@ -567,41 +568,83 @@
     box-shadow: 0 2px 4px rgba(58,143,122,.25);
   }
 
-  /* 窄屏：单列布局 + 侧栏可滚动展开 */
+  /* 窄屏：只显示中间主区，左右栏变成抽屉 */
+  .drawer-trigger { display: none; }
+  .drawer-mask { display: none; }
+
   @media (max-width: 768px) {
+    body { overflow: hidden; }
     .layout {
       grid-template-columns: 1fr;
-      height: auto; min-height: 100vh;
-      padding: 10px;
+      height: 100vh; min-height: 0;
+      padding: 0;
+      gap: 0;
     }
-    body { overflow: auto; }
+    .main {
+      border-radius: 0 !important;
+      height: 100vh;
+      width: 100%;
+    }
+    /* 左右栏：默认隐藏，变成从两侧划入的抽屉 */
     .side {
-      height: auto;
-      overflow: visible;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 6px;
+      position: fixed; top: 0; bottom: 0;
+      width: 82vw; max-width: 320px;
+      z-index: 2000;
+      background: #fdfaf2;
+      box-shadow: 0 0 30px rgba(0,0,0,.25);
+      padding: 16px 12px;
+      overflow-y: auto;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 10px;
+      transition: transform .28s ease;
     }
-    .side .panel {
-      flex: 1 1 calc(50% - 6px);
-      min-width: 140px;
-      padding: 6px 8px;
-    }
-    .side .panel h3 { font-size: 11.5px; }
+    .side-left  { left: 0;  transform: translateX(-105%); }
+    .side-right { right: 0; transform: translateX(105%); }
+    .side-left.open  { transform: translateX(0); }
+    .side-right.open { transform: translateX(0); }
+    .side .panel { flex: 0 0 auto; padding: 10px 12px; }
+    .side .panel h3 { font-size: 13px; }
+    .side .panel .quote { white-space: normal !important; }
     .drawers { grid-template-columns: 1fr 1fr; }
-    .main { min-height: 70vh; }
-    h1 { font-size: 16px !important; }
+
+    /* 抽屉触发按钮：浮在 header 两侧 */
+    .drawer-trigger {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; top: 10px;
+      width: 36px; height: 36px;
+      border-radius: 50%; border: 1.5px solid #c9a771;
+      background: #fff8e3; color: #6b4a24;
+      font-size: 16px; cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+    }
+    .drawer-trigger-left  { left: 10px; }
+    .drawer-trigger-right { right: 10px; }
+
+    /* 遮罩 */
+    .drawer-mask {
+      display: block;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 1900;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .drawer-mask.show { opacity: 1; pointer-events: auto; }
+
+    /* header 给两侧按钮留位 */
+    .main header { padding-left: 56px !important; padding-right: 56px !important; text-align: center; }
+    h1 { font-size: 16px !important; justify-content: center; }
     .sub { display: none !important; }
     .hist-btn { padding: 4px 8px !important; font-size: 11px !important; }
-    /* 移动端：聊天气泡占满；输入框加底部安全距 */
+
     .bubble { max-width: 92% !important; font-size: 14px !important; }
     .inputbar { padding-bottom: max(12px, env(safe-area-inset-bottom)) !important; }
-    textarea { font-size: 16px !important; } /* iOS 不再缩放 */
+    textarea { font-size: 16px !important; }
     .followup { font-size: 12px !important; padding: 4px 10px !important; }
   }
   @media (max-width: 480px) {
-    .side .panel { flex: 1 1 100%; }
-    .drawers { grid-template-columns: 1fr 1fr 1fr !important; }
     /* 输入区按钮缩小+换行，避免挤出屏幕 */
     .inputbar { flex-wrap: wrap !important; gap: 6px !important; padding: 8px !important; }
     .inputbar textarea { flex: 1 1 100% !important; min-height: 44px !important; }
@@ -613,7 +656,7 @@
     .hint { font-size: 11px !important; padding: 4px 8px !important; }
     .intent-bar { gap: 4px !important; padding: 6px 8px !important; }
     .intent-chip { font-size: 11px !important; padding: 3px 8px !important; }
-    .theme-toggle { width: 32px !important; height: 32px !important; top: 8px !important; right: 8px !important; }
+    .theme-toggle { width: 32px !important; height: 32px !important; top: 8px !important; right: 8px !important; display: none !important; }
     /* 图片预览缩略图也缩小 */
     #imgThumb { width: 36px !important; height: 36px !important; }
     #imgName { max-width: 140px !important; font-size: 11px !important; }
@@ -710,7 +753,7 @@
 <div class="layout">
 
   <!-- ============ 左侧 ============ -->
-  <aside class="side">
+  <aside class="side side-left">
     <!-- 北京中医药大学校训 -->
     <div class="panel" style="border-color: var(--bucm-green); background: linear-gradient(135deg, #fff8e3 0%, #e8ede0 100%);">
       <h3 style="color: var(--bucm-green); border-bottom-color: var(--bucm-green);">
@@ -741,6 +784,9 @@
 
   <!-- ============ 中间主区 ============ -->
   <div class="main">
+    <!-- 移动端抽屉触发按钮（仅小屏显示） -->
+    <button id="drawerLeftBtn" class="drawer-trigger drawer-trigger-left" type="button" aria-label="打开左侧栏">☰</button>
+    <button id="drawerRightBtn" class="drawer-trigger drawer-trigger-right" type="button" aria-label="打开右侧栏">📖</button>
     <header>
       <h1 style="display:flex;align-items:center;gap:10px;">
         <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#5cc4a7,#3aa088);color:#fff8e1;font-size:20px;font-weight:900;border:1.5px solid #f2cc6b;box-shadow:0 2px 6px rgba(58,143,122,.3);position:relative;flex-shrink:0;">
@@ -794,7 +840,7 @@
   </div>
 
   <!-- ============ 右侧 ============ -->
-  <aside class="side">
+  <aside class="side side-right">
     <!-- 杏林印记 -->
     <div class="panel" style="background: linear-gradient(135deg, #5cc4a7 0%, #4ab592 100%); color: #fff8e1; border-color: #3aa088;">
       <h3 style="color: var(--bucm-gold); border-bottom-color: rgba(212,168,56,0.4);">
@@ -950,6 +996,46 @@
   <div style="margin-top:14px;padding-top:10px;border-top:1px dashed #d4c89c;font-size:11px;color:#8a6f3a;text-align:center;letter-spacing:1px;">点击色块切换，自动保存到本机</div>
 </div>
 
+<!-- 移动端抽屉遮罩 -->
+<div id="drawerMask" class="drawer-mask"></div>
+
+<script>
+/* ============ 移动端抽屉 ============ */
+(function () {
+  const leftBtn = document.getElementById("drawerLeftBtn");
+  const rightBtn = document.getElementById("drawerRightBtn");
+  const leftSide = document.querySelector(".side-left");
+  const rightSide = document.querySelector(".side-right");
+  const mask = document.getElementById("drawerMask");
+  if (!leftBtn || !rightBtn || !leftSide || !rightSide || !mask) return;
+  function closeAll() {
+    leftSide.classList.remove("open");
+    rightSide.classList.remove("open");
+    mask.classList.remove("show");
+  }
+  leftBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    rightSide.classList.remove("open");
+    leftSide.classList.toggle("open");
+    mask.classList.toggle("show", leftSide.classList.contains("open"));
+  });
+  rightBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    leftSide.classList.remove("open");
+    rightSide.classList.toggle("open");
+    mask.classList.toggle("show", rightSide.classList.contains("open"));
+  });
+  mask.addEventListener("click", closeAll);
+  // 抽屉内点面板不关闭，点空白关
+  [leftSide, rightSide].forEach((el) => {
+    el.addEventListener("click", (e) => { if (e.target === el) closeAll(); });
+  });
+  // 切换到桌面尺寸时强制清状态
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 768) closeAll();
+  });
+})();
+</script>
 <script>
 const $ = (id) => document.getElementById(id);
 const chat = $("chat");

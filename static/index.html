@@ -645,38 +645,36 @@
     h1 { font-size: 15px !important; justify-content: center; flex-wrap: wrap; gap: 6px !important; width: 100%; margin-bottom: 4px !important; }
     h1 > span:first-child { width: 26px !important; height: 26px !important; font-size: 15px !important; }
     .sub { display: none !important; }
-    /* header 单行：药+标题+4 按钮全部水平并列 */
+    /* header 两行：①药+标题 ②4 个按钮 */
     .main header {
       display: flex !important;
       flex-direction: row !important;
-      flex-wrap: nowrap !important;
+      flex-wrap: wrap !important;
       align-items: center !important;
-      justify-content: flex-start !important;
-      gap: 6px !important;
-      padding: 8px 44px !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      padding: 10px 44px !important;
       position: relative;
-      overflow-x: auto;
     }
     h1 {
-      display: inline-flex !important;
+      display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
-      justify-content: flex-start !important;
-      gap: 6px !important;
-      width: auto !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      width: 100% !important;          /* 独占第一行 */
       margin: 0 !important;
-      font-size: 14px !important;
+      font-size: 16px !important;
       flex-wrap: nowrap !important;
-      flex-shrink: 0 !important;
     }
     h1 > span:first-child {
-      width: 26px !important; height: 26px !important;
-      font-size: 14px !important;
+      width: 28px !important; height: 28px !important;
+      font-size: 15px !important;
     }
     h1 > span:nth-child(2) {
       flex-direction: row !important;
-      gap: 2px !important;
-      letter-spacing: 2px !important;
+      gap: 4px !important;
+      letter-spacing: 3px !important;
       white-space: nowrap !important;
     }
     .sub { display: none !important; }

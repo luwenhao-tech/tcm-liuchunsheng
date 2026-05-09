@@ -653,9 +653,22 @@
       align-items: center !important;
       justify-content: center !important;
       gap: 8px !important;
-      padding: 10px 44px !important;
+      padding: 10px 56px !important;       /* 左右 56px 给抽屉按钮让位 */
       position: relative;
     }
+    /* ☰ / 📖 强制正圆 */
+    .drawer-trigger {
+      width: 36px !important;
+      height: 36px !important;
+      min-width: 36px !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      top: 12px !important;
+      aspect-ratio: 1 / 1 !important;
+      flex-shrink: 0 !important;
+    }
+    .drawer-trigger-left  { left: 10px !important; }
+    .drawer-trigger-right { right: 10px !important; }
     /* 在 h1 后插入一个 100% 宽的换行符，强制把后面元素挤到下一行 */
     .main header h1::after {
       content: "";
@@ -686,9 +699,20 @@
     }
     h1 > span:nth-child(2) {
       flex-direction: row !important;
-      gap: 4px !important;
-      letter-spacing: 3px !important;
+      gap: 0 !important;                   /* 去掉 span 间距 */
+      letter-spacing: 4px !important;
+      word-spacing: 0 !important;
       white-space: nowrap !important;
+    }
+    /* 内层"春生""说药"两个 span 也强制 4px 字距，包括最后一字 */
+    h1 > span:nth-child(2) > span {
+      letter-spacing: 4px !important;
+      padding-right: 4px !important;        /* 让"春生"末尾"生"和"说"之间也有 4px */
+      display: inline-block !important;
+    }
+    h1 > span:nth-child(2) > span:last-child {
+      padding-right: 0 !important;          /* 最后一字不加 */
+      letter-spacing: 4px !important;
     }
     .sub { display: none !important; }
     /* 第二行：4 个按钮横排平分一行，显示图标+文字 */

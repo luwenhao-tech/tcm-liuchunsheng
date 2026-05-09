@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>春生说药 · 刘春生教授 AI 助教</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235cc4a7'/%3E%3Cstop offset='1' stop-color='%233aa088'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='PingFang SC,Microsoft YaHei,sans-serif' font-size='38' font-weight='900' text-anchor='middle' fill='%23fff8e1'%3E药%3C/text%3E%3Ccircle cx='51' cy='14' r='5' fill='%23ffd97a'/%3E%3C/svg%3E"/>
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235cc4a7'/%3E%3Cstop offset='1' stop-color='%233aa088'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='PingFang SC,Microsoft YaHei,sans-serif' font-size='38' font-weight='900' text-anchor='middle' fill='%23fff8e1'%3E药%3C/text%3E%3Ccircle cx='51' cy='14' r='5' fill='%23ffd97a'/%3E%3C/svg%3E"/>
@@ -661,6 +661,91 @@
     #imgThumb { width: 36px !important; height: 36px !important; }
     #imgName { max-width: 140px !important; font-size: 11px !important; }
   }
+
+  /* ============ 移动端横屏适配 ============ */
+  /* 用 dvh 替代 vh：iOS Safari 地址栏伸缩时高度自适应 */
+  @supports (height: 100dvh) {
+    @media (max-width: 1024px) {
+      .layout { height: 100dvh; }
+      .main { height: 100dvh; }
+    }
+  }
+
+  /* 横屏（宽 > 高 且 高 ≤ 500px）：典型手机横放 */
+  @media (max-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
+    /* 抽屉宽度收窄，避免遮住整屏 */
+    .side { width: 55vw !important; max-width: 360px !important; padding: 10px !important; }
+    .side .panel { padding: 6px 10px !important; margin-bottom: 4px; }
+    .side .panel h3 { font-size: 12px !important; padding-bottom: 4px !important; margin-bottom: 4px !important; }
+
+    /* 头部压扁 */
+    .main header { padding: 6px 56px !important; }
+    h1 { font-size: 14px !important; }
+    h1 > span:first-child { width: 24px !important; height: 24px !important; font-size: 14px !important; }
+
+    /* 抽屉触发按钮缩小 */
+    .drawer-trigger { width: 30px !important; height: 30px !important; top: 6px !important; font-size: 13px !important; }
+    .drawer-trigger-left { left: 8px !important; }
+    .drawer-trigger-right { right: 8px !important; }
+
+    /* 输入栏单行排布，节省纵向空间 */
+    .inputbar {
+      flex-wrap: nowrap !important; gap: 6px !important;
+      padding: 6px 8px max(6px, env(safe-area-inset-bottom)) !important;
+    }
+    .inputbar textarea {
+      flex: 1 1 auto !important;
+      min-height: 36px !important; max-height: 80px !important;
+      padding: 6px 10px !important; font-size: 15px !important;
+    }
+    .inputbar button {
+      height: 36px !important; padding: 0 8px !important;
+      font-size: 12px !important;
+    }
+
+    /* 聊天气泡更紧凑 */
+    .bubble { font-size: 13.5px !important; padding: 8px 12px !important; }
+    .hint { display: none !important; }
+    .intent-bar { padding: 4px 8px !important; }
+    .intent-chip { font-size: 10.5px !important; padding: 2px 8px !important; }
+
+    /* 安全区域：刘海屏横放时左右有缺口 */
+    .main {
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
+
+  /* 平板横屏（>768 且 ≤1024，宽>高）：可以恢复三栏，但栏更窄 */
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+    .layout {
+      grid-template-columns: 200px minmax(0, 1fr) 200px;
+      gap: 10px; padding: 10px;
+    }
+    .side .panel { padding: 8px 10px; }
+    .side .panel h3 { font-size: 12px; }
+  }
+
+  /* 平板竖屏（>768 且 ≤1024，高>宽）：保持抽屉模式（继承 768 断点） */
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    .layout { grid-template-columns: 1fr; padding: 0; gap: 0; height: 100dvh; }
+    body { overflow: hidden; }
+    .main { border-radius: 0 !important; height: 100dvh; }
+    .side {
+      position: fixed; top: 0; bottom: 0;
+      width: 60vw; max-width: 380px;
+      z-index: 2000; background: #fdfaf2;
+      box-shadow: 0 0 30px rgba(0,0,0,.25);
+      padding: 16px 14px; overflow-y: auto;
+      flex-direction: column; flex-wrap: nowrap;
+      transition: transform .28s ease;
+    }
+    .side-left  { left: 0;  transform: translateX(-105%); }
+    .side-right { right: 0; transform: translateX(105%); }
+    .side-left.open, .side-right.open { transform: translateX(0); }
+    .drawer-trigger { display: flex; }
+    .drawer-mask { display: block; }
+  }
   /* 暗色模式（手动切换：html.dark） */
   html.dark { background: #1a1d1c; }
   html.dark body { background: #1a1d1c; color: #d8d2c2; }
@@ -1033,6 +1118,10 @@
   // 切换到桌面尺寸时强制清状态
   window.addEventListener("resize", () => {
     if (window.innerWidth > 768) closeAll();
+  });
+  // 横竖屏切换时也收起，避免布局错乱
+  window.addEventListener("orientationchange", () => {
+    setTimeout(closeAll, 100);
   });
 })();
 </script>

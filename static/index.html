@@ -645,13 +645,12 @@
     h1 { font-size: 15px !important; justify-content: center; flex-wrap: wrap; gap: 6px !important; width: 100%; margin-bottom: 4px !important; }
     h1 > span:first-child { width: 26px !important; height: 26px !important; font-size: 15px !important; }
     .sub { display: none !important; }
-    /* header 横排 + 自动换行：h1 占满第一行，4 按钮自动落在第二行 */
+    /* header 三层堆叠：①☰📖浮在两侧 ②药+春生说药一行 ③4 个按钮一行 */
     .main header {
       display: flex !important;
-      flex-direction: row !important;
-      flex-wrap: wrap !important;
+      flex-direction: column !important;
       align-items: center !important;
-      justify-content: center !important;
+      justify-content: flex-start !important;
       gap: 8px !important;
       padding: 12px 12px 10px !important;
       position: relative;
@@ -685,47 +684,43 @@
       opacity: .85;
       letter-spacing: 1px !important;
     }
-    /* 第二行：4 个按钮一排横排，带图标和文字 */
+    /* 第二行：4 个圆按钮 */
     #userChip {
-      order: 99;
+      order: 99;                      /* 用户名 chip 排到最后 */
       margin: 0 !important;
       padding: 4px 10px !important;
       font-size: 11.5px !important;
       border-radius: 16px !important;
     }
     .hist-btn {
-      flex: 1 1 0 !important;             /* 4 个等宽平分 */
-      min-width: 0 !important;
-      max-width: 80px !important;
-      height: 34px !important;
-      padding: 0 6px !important;
-      font-size: 12px !important;
-      letter-spacing: 1px !important;
+      width: 40px !important;
+      height: 40px !important;
+      padding: 0 !important;
+      font-size: 0 !important;
+      letter-spacing: 0 !important;
       margin: 0 !important;
-      gap: 3px !important;
-      border-radius: 17px !important;
+      gap: 0 !important;
+      border-radius: 50% !important;
       background: rgba(255, 248, 227, 0.95) !important;
       border: 1.5px solid rgba(255, 217, 122, 0.85) !important;
       color: #6b4a24 !important;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.6) !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.6) !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      white-space: nowrap !important;
-      transition: transform .15s !important;
+      transition: transform .15s, box-shadow .15s !important;
+      position: relative;
     }
-    .hist-btn:active { transform: scale(.95); }
-    /* 4 按钮包在一个伸缩条里 */
-    .main header > #newChatBtn,
-    .main header > #themeBtn,
-    .main header > #paperBtn,
-    .main header > #histBtn {
-      flex: 1 1 0;
+    .hist-btn:active { transform: scale(.92); }
+    #newChatBtn::before { content: "✨"; font-size: 18px; }
+    #themeBtn::before   { content: "🎨"; font-size: 18px; }
+    #paperBtn::before   { content: "📚"; font-size: 18px; }
+    #histBtn::before    { content: "📜"; font-size: 18px; }
+    #newChatBtn {
+      background: linear-gradient(135deg, #ffd97a, #f2cc6b) !important;
+      border-color: #d4a838 !important;
+      box-shadow: 0 3px 8px rgba(212,168,56,.35) !important;
     }
-    /* 让 4 个按钮形成一排：用 contain 包裹 + gap */
-    #newChatBtn { background: linear-gradient(135deg, #ffd97a, #f2cc6b) !important;
-      border-color: #d4a838 !important; color: #5a3f10 !important;
-      box-shadow: 0 3px 8px rgba(212,168,56,.35) !important; }
 
     .bubble { max-width: 92% !important; font-size: 14px !important; }
     .inputbar { padding-bottom: max(12px, env(safe-area-inset-bottom)) !important; }

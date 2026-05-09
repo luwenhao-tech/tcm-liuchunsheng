@@ -650,10 +650,10 @@
       display: flex !important;
       flex-direction: row !important;
       flex-wrap: wrap !important;
-      align-items: center !important;
+      align-items: flex-start !important;     /* 顶对齐 */
       justify-content: center !important;
       gap: 8px !important;
-      padding: 10px 56px !important;       /* 左右 56px 给抽屉按钮让位 */
+      padding: 12px 56px !important;          /* 与 ☰ top:12px 对齐 */
       position: relative;
     }
     /* ☰ / 📖 强制正圆 */
@@ -689,9 +689,11 @@
       gap: 8px !important;
       width: 100% !important;
       margin: 0 !important;
+      padding: 0 !important;
       font-size: 16px !important;
       flex-wrap: nowrap !important;
       order: 1;
+      line-height: 1 !important;             /* 顶端紧贴 padding-top */
     }
     h1 > span:first-child {
       width: 28px !important; height: 28px !important;

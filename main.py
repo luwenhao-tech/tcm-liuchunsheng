@@ -274,6 +274,17 @@ async def api_chat(req: ChatRequest, request: Request, user: Dict = Depends(requ
     if not req.prompt.strip() and not req.image:
         raise HTTPException(400, "问题不能为空")
 
+    # 后端兜底：图片大小校验（base64 字符串长度 * 0.75 ≈ 字节数）
+    if req.image:
+        if not req.image.startswith("data:image/"):
+            raise HTTPException(400, "图片格式不合法")
+        # 6MB base64 ≈ 4.5MB 原图，超出直接拒
+        if len(req.image) > 6 * 1024 * 1024:
+            raise HTTPException(413, "图片过大，请压缩后重传（建议 ≤4MB）")
+        allowed_prefixes = ("data:image/jpeg", "data:image/png", "data:image/webp")
+        if not req.image.startswith(allowed_prefixes):
+            raise HTTPException(400, "仅支持 JPG / PNG / WebP 格式")
+
     # 限流：同一账号每分钟最多 RATE_LIMIT_MAX 次
     rate_limit_check(user["account"])
 

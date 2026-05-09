@@ -602,6 +602,21 @@
   @media (max-width: 480px) {
     .side .panel { flex: 1 1 100%; }
     .drawers { grid-template-columns: 1fr 1fr 1fr !important; }
+    /* 输入区按钮缩小+换行，避免挤出屏幕 */
+    .inputbar { flex-wrap: wrap !important; gap: 6px !important; padding: 8px !important; }
+    .inputbar textarea { flex: 1 1 100% !important; min-height: 44px !important; }
+    .inputbar button {
+      height: 36px !important; padding: 0 10px !important;
+      font-size: 13px !important; flex: 0 0 auto !important;
+    }
+    #imgBtn, #thinkToggle { font-size: 12px !important; }
+    .hint { font-size: 11px !important; padding: 4px 8px !important; }
+    .intent-bar { gap: 4px !important; padding: 6px 8px !important; }
+    .intent-chip { font-size: 11px !important; padding: 3px 8px !important; }
+    .theme-toggle { width: 32px !important; height: 32px !important; top: 8px !important; right: 8px !important; }
+    /* 图片预览缩略图也缩小 */
+    #imgThumb { width: 36px !important; height: 36px !important; }
+    #imgName { max-width: 140px !important; font-size: 11px !important; }
   }
   /* 暗色模式（手动切换：html.dark） */
   html.dark { background: #1a1d1c; }
@@ -762,7 +777,7 @@
 
     <div class="inputbar">
       <textarea id="prompt" placeholder="您说话，Enter 发送，Shift+Enter 换行；点 📷 传图鉴别"></textarea>
-      <input type="file" id="imgInput" accept="image/*" style="display:none;" />
+      <input type="file" id="imgInput" accept="image/jpeg,image/png,image/webp" capture="environment" style="display:none;" />
       <button id="imgBtn" type="button" title="上传药材图片，AI 帮您鉴别" style="background:#fff;color:#a83224;border:1.5px solid #a83224;border-radius:20px;padding:0 12px;font-size:15px;font-family:inherit;cursor:pointer;height:42px;flex-shrink:0;white-space:nowrap;">📷</button>
       <button id="thinkToggle" type="button" title="开启后用推理模型，回答更深入但稍慢" style="background:#fff;color:#3a8f7a;border:1.5px solid #3a8f7a;border-radius:20px;padding:0 12px;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:1px;height:42px;flex-shrink:0;white-space:nowrap;">深度思考</button>
       <button id="send">发送</button>
@@ -1314,23 +1329,74 @@ const imgThumb = $("imgThumb");
 const imgName = $("imgName");
 const imgRemove = $("imgRemove");
 
+/* 图片预处理：格式校验 + 大图自动压缩到 ≤4MB / 长边 ≤1600px */
+const MAX_RAW_BYTES = 15 * 1024 * 1024;   // 原图最大 15MB（再大直接拒）
+const TARGET_MAX_BYTES = 4 * 1024 * 1024; // 压缩目标 ≤4MB
+const MAX_DIMENSION = 1600;               // 长边像素上限
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+async function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        // 二分质量：从 0.85 起降，直到 ≤4MB
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+        while (dataUrl.length * 0.75 > TARGET_MAX_BYTES && quality > 0.4) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL("image/jpeg", quality);
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("图片解析失败"));
+      img.src = ev.target.result;
+    };
+    reader.onerror = () => reject(new Error("文件读取失败"));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImageFile(file, displayName) {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    alert("仅支持 JPG / PNG / WebP 格式");
+    return false;
+  }
+  if (file.size > MAX_RAW_BYTES) {
+    alert("图片过大（>15MB），请先在手机相册压缩或截屏后再上传");
+    return false;
+  }
+  try {
+    imgName.textContent = "压缩中…";
+    imgPreview.style.display = "block";
+    const dataUrl = await compressImage(file);
+    pendingImage = dataUrl;
+    imgThumb.src = dataUrl;
+    const kb = Math.round(dataUrl.length * 0.75 / 1024);
+    imgName.textContent = `${displayName}（${kb}KB）`;
+    return true;
+  } catch (err) {
+    alert("图片处理失败：" + err.message);
+    imgPreview.style.display = "none";
+    return false;
+  }
+}
+
 imgBtn?.addEventListener("click", () => imgInput.click());
-imgInput?.addEventListener("change", (e) => {
+imgInput?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 8 * 1024 * 1024) {
-    alert("图片不能超过 8MB");
-    imgInput.value = "";
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    pendingImage = ev.target.result;
-    imgThumb.src = pendingImage;
-    imgName.textContent = file.name;
-    imgPreview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+  const ok = await handleImageFile(file, file.name);
+  if (!ok) imgInput.value = "";
 });
 imgRemove?.addEventListener("click", () => {
   pendingImage = null;
@@ -1340,19 +1406,14 @@ imgRemove?.addEventListener("click", () => {
 
 /* 拖拽 / 粘贴图片 */
 const promptEl = $("prompt");
-promptEl?.addEventListener("paste", (e) => {
+promptEl?.addEventListener("paste", async (e) => {
   for (const item of e.clipboardData.items) {
     if (item.type.startsWith("image/")) {
       const file = item.getAsFile();
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        pendingImage = ev.target.result;
-        imgThumb.src = pendingImage;
-        imgName.textContent = "粘贴的图片";
-        imgPreview.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-      e.preventDefault();
+      if (file) {
+        e.preventDefault();
+        await handleImageFile(file, "粘贴的图片");
+      }
       break;
     }
   }

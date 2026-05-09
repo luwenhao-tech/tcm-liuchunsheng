@@ -690,47 +690,82 @@
 
   /* 横屏（宽 > 高 且 高 ≤ 500px）：典型手机横放 */
   @media (max-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
-    /* 抽屉宽度收窄，避免遮住整屏 */
-    .side { width: 55vw !important; max-width: 360px !important; padding: 10px !important; }
-    .side .panel { padding: 6px 10px !important; margin-bottom: 4px; }
+    /* ① 强制走抽屉模式（即使宽度 >768） */
+    body { overflow: hidden; }
+    .layout {
+      grid-template-columns: 1fr !important;
+      height: 100dvh; padding: 0; gap: 0;
+    }
+    .main { border-radius: 0 !important; height: 100dvh; width: 100%; }
+    .side {
+      position: fixed !important; top: 0; bottom: 0;
+      width: 55vw !important; max-width: 360px !important;
+      z-index: 2000;
+      background: #fdfaf2;
+      box-shadow: 0 0 30px rgba(0,0,0,.25);
+      padding: 10px !important;
+      overflow-y: auto;
+      flex-direction: column; flex-wrap: nowrap;
+      transition: transform .28s ease;
+    }
+    .side-left  { left: 0;  transform: translateX(-105%); }
+    .side-right { right: 0; transform: translateX(105%); }
+    .side-left.open, .side-right.open { transform: translateX(0); }
+    .side .panel { padding: 6px 10px !important; margin-bottom: 4px; flex: 0 0 auto; }
     .side .panel h3 { font-size: 12px !important; padding-bottom: 4px !important; margin-bottom: 4px !important; }
+    .side .panel .quote { white-space: normal !important; }
+    .drawer-trigger { display: flex !important; }
+    .drawer-mask { display: block; }
 
-    /* 头部压扁 */
-    .main header { padding: 6px 56px !important; }
-    h1 { font-size: 14px !important; }
-    h1 > span:first-child { width: 24px !important; height: 24px !important; font-size: 14px !important; }
+    /* ② 头部压扁 */
+    .main header {
+      padding: 6px 50px !important;
+      flex-wrap: wrap !important;
+      gap: 4px !important;
+      justify-content: center !important;
+    }
+    h1 { font-size: 14px !important; justify-content: center; flex-wrap: wrap; gap: 6px !important; width: 100%; margin-bottom: 2px !important; }
+    h1 > span:first-child { width: 22px !important; height: 22px !important; font-size: 13px !important; }
+    .sub { display: none !important; }
+    .hist-btn {
+      padding: 2px 7px !important; font-size: 10.5px !important;
+      letter-spacing: 0 !important; margin-left: 0 !important;
+      gap: 2px !important; border-radius: 12px !important;
+    }
+    #userChip { margin-left: 0 !important; padding: 2px 7px !important; font-size: 10.5px !important; }
 
-    /* 抽屉触发按钮缩小 */
-    .drawer-trigger { width: 30px !important; height: 30px !important; top: 6px !important; font-size: 13px !important; }
-    .drawer-trigger-left { left: 8px !important; }
-    .drawer-trigger-right { right: 8px !important; }
+    /* ③ 抽屉触发按钮缩小 */
+    .drawer-trigger { width: 28px !important; height: 28px !important; top: 5px !important; font-size: 12px !important; }
+    .drawer-trigger-left { left: 6px !important; }
+    .drawer-trigger-right { right: 6px !important; }
 
-    /* 输入栏单行排布，节省纵向空间 */
+    /* ④ 输入栏单行排布，节省纵向空间 */
     .inputbar {
       flex-wrap: nowrap !important; gap: 6px !important;
       padding: 6px 8px max(6px, env(safe-area-inset-bottom)) !important;
     }
     .inputbar textarea {
       flex: 1 1 auto !important;
-      min-height: 36px !important; max-height: 80px !important;
+      min-height: 34px !important; max-height: 70px !important;
       padding: 6px 10px !important; font-size: 15px !important;
     }
     .inputbar button {
-      height: 36px !important; padding: 0 8px !important;
+      height: 34px !important; padding: 0 8px !important;
       font-size: 12px !important;
     }
 
-    /* 聊天气泡更紧凑 */
-    .bubble { font-size: 13.5px !important; padding: 8px 12px !important; }
+    /* ⑤ 聊天气泡更紧凑 */
+    .bubble { font-size: 13.5px !important; padding: 8px 12px !important; max-width: 88% !important; }
     .hint { display: none !important; }
     .intent-bar { padding: 4px 8px !important; }
     .intent-chip { font-size: 10.5px !important; padding: 2px 8px !important; }
 
-    /* 安全区域：刘海屏横放时左右有缺口 */
+    /* ⑥ 安全区域：刘海屏横放时左右有缺口 */
     .main {
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
     }
+    .theme-toggle { display: none !important; }
   }
 
   /* 平板横屏（真平板：宽 769-1024 且 高 ≥ 600）：可以恢复三栏 */
@@ -1132,9 +1167,12 @@
   [leftSide, rightSide].forEach((el) => {
     el.addEventListener("click", (e) => { if (e.target === el) closeAll(); });
   });
-  // 切换到桌面尺寸时强制清状态
+  // 切换到真桌面（宽且高）时收起抽屉
+  function isDesktop() {
+    return window.innerWidth > 1024 && window.innerHeight > 500;
+  }
   window.addEventListener("resize", () => {
-    if (window.innerWidth > 768) closeAll();
+    if (isDesktop()) closeAll();
   });
   // 横竖屏切换时也收起，避免布局错乱
   window.addEventListener("orientationchange", () => {

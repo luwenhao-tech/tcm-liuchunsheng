@@ -684,41 +684,41 @@
       opacity: .85;
       letter-spacing: 1px !important;
     }
-    /* 第二行：4 个圆按钮 */
+    /* 第二行：4 个按钮横排平分一行，显示图标+文字 */
     #userChip {
-      order: 99;                      /* 用户名 chip 排到最后 */
+      order: 99;
       margin: 0 !important;
       padding: 4px 10px !important;
       font-size: 11.5px !important;
       border-radius: 16px !important;
+      flex: 0 0 auto !important;
     }
     .hist-btn {
-      width: 40px !important;
-      height: 40px !important;
-      padding: 0 !important;
-      font-size: 0 !important;
-      letter-spacing: 0 !important;
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+      max-width: 88px !important;
+      height: 34px !important;
+      padding: 0 6px !important;
+      font-size: 12px !important;
+      letter-spacing: 1px !important;
       margin: 0 !important;
-      gap: 0 !important;
-      border-radius: 50% !important;
+      gap: 3px !important;
+      border-radius: 17px !important;
       background: rgba(255, 248, 227, 0.95) !important;
       border: 1.5px solid rgba(255, 217, 122, 0.85) !important;
       color: #6b4a24 !important;
-      box-shadow: 0 2px 6px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.6) !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.6) !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      transition: transform .15s, box-shadow .15s !important;
-      position: relative;
+      white-space: nowrap !important;
+      transition: transform .15s !important;
     }
-    .hist-btn:active { transform: scale(.92); }
-    #newChatBtn::before { content: "✨"; font-size: 18px; }
-    #themeBtn::before   { content: "🎨"; font-size: 18px; }
-    #paperBtn::before   { content: "📚"; font-size: 18px; }
-    #histBtn::before    { content: "📜"; font-size: 18px; }
+    .hist-btn:active { transform: scale(.95); }
     #newChatBtn {
       background: linear-gradient(135deg, #ffd97a, #f2cc6b) !important;
       border-color: #d4a838 !important;
+      color: #5a3f10 !important;
       box-shadow: 0 3px 8px rgba(212,168,56,.35) !important;
     }
 

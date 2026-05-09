@@ -688,84 +688,30 @@
     }
   }
 
-  /* 横屏（宽 > 高 且 高 ≤ 500px）：典型手机横放 */
-  @media (max-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
-    /* ① 强制走抽屉模式（即使宽度 >768） */
-    body { overflow: hidden; }
-    .layout {
-      grid-template-columns: 1fr !important;
-      height: 100dvh; padding: 0; gap: 0;
-    }
-    .main { border-radius: 0 !important; height: 100dvh; width: 100%; }
-    .side {
-      position: fixed !important; top: 0; bottom: 0;
-      width: 55vw !important; max-width: 360px !important;
-      z-index: 2000;
-      background: #fdfaf2;
-      box-shadow: 0 0 30px rgba(0,0,0,.25);
-      padding: 10px !important;
-      overflow-y: auto;
-      flex-direction: column; flex-wrap: nowrap;
-      transition: transform .28s ease;
-    }
-    .side-left  { left: 0;  transform: translateX(-105%); }
-    .side-right { right: 0; transform: translateX(105%); }
-    .side-left.open, .side-right.open { transform: translateX(0); }
-    .side .panel { padding: 6px 10px !important; margin-bottom: 4px; flex: 0 0 auto; }
-    .side .panel h3 { font-size: 12px !important; padding-bottom: 4px !important; margin-bottom: 4px !important; }
-    .side .panel .quote { white-space: normal !important; }
-    .drawer-trigger { display: flex !important; }
-    .drawer-mask { display: block; }
-
-    /* ② 头部压扁 */
-    .main header {
-      padding: 6px 50px !important;
-      flex-wrap: wrap !important;
-      gap: 4px !important;
-      justify-content: center !important;
-    }
-    h1 { font-size: 14px !important; justify-content: center; flex-wrap: wrap; gap: 6px !important; width: 100%; margin-bottom: 2px !important; }
-    h1 > span:first-child { width: 22px !important; height: 22px !important; font-size: 13px !important; }
-    .sub { display: none !important; }
-    .hist-btn {
-      padding: 2px 7px !important; font-size: 10.5px !important;
-      letter-spacing: 0 !important; margin-left: 0 !important;
-      gap: 2px !important; border-radius: 12px !important;
-    }
-    #userChip { margin-left: 0 !important; padding: 2px 7px !important; font-size: 10.5px !important; }
-
-    /* ③ 抽屉触发按钮缩小 */
-    .drawer-trigger { width: 28px !important; height: 28px !important; top: 5px !important; font-size: 12px !important; }
-    .drawer-trigger-left { left: 6px !important; }
-    .drawer-trigger-right { right: 6px !important; }
-
-    /* ④ 输入栏单行排布，节省纵向空间 */
-    .inputbar {
-      flex-wrap: nowrap !important; gap: 6px !important;
-      padding: 6px 8px max(6px, env(safe-area-inset-bottom)) !important;
-    }
-    .inputbar textarea {
-      flex: 1 1 auto !important;
-      min-height: 34px !important; max-height: 70px !important;
-      padding: 6px 10px !important; font-size: 15px !important;
-    }
-    .inputbar button {
-      height: 34px !important; padding: 0 8px !important;
-      font-size: 12px !important;
-    }
-
-    /* ⑤ 聊天气泡更紧凑 */
-    .bubble { font-size: 13.5px !important; padding: 8px 12px !important; max-width: 88% !important; }
-    .hint { display: none !important; }
-    .intent-bar { padding: 4px 8px !important; }
-    .intent-chip { font-size: 10.5px !important; padding: 2px 8px !important; }
-
-    /* ⑥ 安全区域：刘海屏横放时左右有缺口 */
-    .main {
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-    .theme-toggle { display: none !important; }
+  /* ============ 横屏锁定提示 ============ */
+  /* 手机/小屏横屏时（高 ≤ 500，排除平板）盖一层提示，强制竖屏使用 */
+  #rotateHint {
+    display: none;
+    position: fixed; inset: 0; z-index: 9998;
+    background: linear-gradient(135deg, #3a8f7a 0%, #4ea693 50%, #2d6b5c 100%);
+    color: #fff8e3;
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 30px;
+    font-family: inherit;
+  }
+  #rotateHint .icon {
+    font-size: 64px; margin-bottom: 20px;
+    animation: rotateAnim 2s ease-in-out infinite;
+  }
+  #rotateHint h2 { font-size: 20px; letter-spacing: 4px; margin: 0 0 10px; color: #ffd97a; }
+  #rotateHint p  { font-size: 14px; letter-spacing: 1px; opacity: .85; margin: 0; line-height: 1.7; }
+  @keyframes rotateAnim {
+    0%, 100% { transform: rotate(-90deg); }
+    50%      { transform: rotate(0deg); }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #rotateHint { display: flex !important; }
+    body { overflow: hidden !important; }
   }
 
   /* 平板横屏（真平板：宽 769-1024 且 高 ≥ 600）：可以恢复三栏 */
@@ -858,6 +804,13 @@
 </style>
 </head>
 <body>
+<!-- ============ 横屏锁定提示 ============ -->
+<div id="rotateHint">
+  <div class="icon">📱</div>
+  <h2>请竖屏使用</h2>
+  <p>春生说药 · 仅支持竖屏体验<br/>请将设备旋转回竖直方向</p>
+</div>
+
 <!-- ============ 登录页 ============ -->
 <div id="loginMask" style="position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,#3a8f7a 0%,#4ea693 50%,#2d6b5c 100%);display:flex;align-items:center;justify-content:center;">
   <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%, rgba(242,204,107,.15) 0%, transparent 40%),radial-gradient(circle at 80% 70%, rgba(255,248,227,.12) 0%, transparent 40%);pointer-events:none;"></div>
